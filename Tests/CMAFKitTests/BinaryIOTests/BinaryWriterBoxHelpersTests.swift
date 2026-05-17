@@ -4,8 +4,8 @@
 // Tests for the box assembly helpers on BinaryWriter
 // (writeBox + writeFullBox), per ISO/IEC 14496-12 §4.2.
 //
-// Per addendum F.7 there is no separate ISOBoxWriter type — these helpers
-// plus per-box `encode(to:)` are the entire ISOBMFF writing surface.
+// CMAFKit provides no separate ISOBoxWriter type — these helpers plus
+// per-box `encode(to:)` are the entire ISOBMFF writing surface.
 
 import Foundation
 import Testing

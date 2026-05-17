@@ -29,7 +29,7 @@ struct ColorPrimariesStubGuardTests {
 
     @Test
     func smpteEG432P3D65RawValueIs12() {
-        // Per addendum F.5 — ISO/IEC 23001-8 §7 code point 12.
+        // ISO/IEC 23001-8 §7 code point 12 — SMPTE EG 432-1 / Display P3.
         #expect(ColorPrimaries.smpteEG432_P3D65.rawValue == 12)
     }
 
@@ -45,7 +45,8 @@ struct ColorPrimariesStubGuardTests {
 
     @Test
     func dolbyVisionProfilesFlatEnum() {
-        // Per addendum F.6 — flat enum, sub-flavors via dvBLSignalCompatibilityID.
+        // Flat enum: profile-8 sub-flavors live on dvBLSignalCompatibilityID
+        // (per the public Dolby Vision specification).
         #expect(DolbyVisionProfile(rawValue: 5) == .profile5)
         #expect(DolbyVisionProfile(rawValue: 7) == .profile7)
         #expect(DolbyVisionProfile(rawValue: 8) == .profile8)

@@ -34,7 +34,8 @@ struct HDRMetadataTests {
 
     @Test
     func dolbyVisionProfile8Sub1StorageFidelity() {
-        // Per addendum F.6 — sub-flavor 8.1 is profile=8 + dvBLSignalCompatibilityID=1
+        // Sub-flavor 8.1 is profile=8 + dvBLSignalCompatibilityID=1
+        // (per the public Dolby Vision specification).
         let dv = DolbyVisionMetadata(
             profile: .profile8,
             level: 9,

@@ -74,7 +74,7 @@ public enum MediaTimestampRescaleError: Error, Equatable, Sendable {
 /// Rescale a `MediaTimestamp` to a new `timescale`, using exact integer
 /// arithmetic. Throws on overflow rather than silently wrapping.
 ///
-/// Implementation discipline (per addendum F.9):
+/// Implementation discipline:
 ///   - The intermediate product is checked via
 ///     `Int64.multipliedReportingOverflow(by:)`; on overflow, this function
 ///     throws ``MediaTimestampRescaleError/overflow(value:newTimescale:oldTimescale:)``.

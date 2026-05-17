@@ -4,8 +4,8 @@ The eleven-module layered design of CMAFKit.
 
 ## Overview
 
-CMAFKit follows a strict layered architecture. See `swift-cmaf-kit-spec.md` §7
-for the canonical description. The layers are:
+CMAFKit follows a strict layered architecture. The dependency rules are documented inline in each module.
+ The layers are:
 
 - Layer 0 — BinaryIO
 - Layer 1 — Media

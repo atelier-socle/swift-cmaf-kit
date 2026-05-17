@@ -2,8 +2,8 @@
 // Copyright 2026 Atelier Socle SAS
 
 // Tests for MediaTimestamp + rescale — ISO/IEC 14496-12 §8.4.2 timescale.
-// Per addendum F.9, arithmetic discipline is integer-only; rescale throws on
-// overflow rather than wrapping.
+// Arithmetic discipline is integer-only on `(value, timescale)` rationals;
+// `rescale` throws on intermediate-product overflow rather than wrapping.
 
 import Foundation
 import Testing

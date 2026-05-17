@@ -15,7 +15,7 @@ public enum DynamicRange: Sendable, Hashable {
     case hdr10
     /// HDR10+ (PQ + dynamic SMPTE ST 2094-40 SEI metadata).
     case hdr10Plus
-    /// Dolby Vision, with its specific profile (5/7/8/10 per addendum F.6).
+    /// Dolby Vision, with its specific profile (5/7/8/10).
     case dolbyVision(profile: DolbyVisionProfile)
     /// Hybrid Log-Gamma (BT.2100).
     case hlg

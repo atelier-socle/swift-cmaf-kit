@@ -3,9 +3,10 @@
 
 // MARK: - HDRMetadata
 //
-// Top-level HDR metadata struct. References types from Module 4 (Color),
-// which are stubbed in Session 1 via Color/_ModulePlaceholder.swift and
-// fully implemented in Session 5 per addendum F.5 / F.6.
+// Top-level HDR metadata struct. References types from the Color module,
+// which are provided as minimal stubs in `Color/_ModulePlaceholder.swift`
+// until the full Color module lands; the stubs preserve the public API
+// surface exactly so this file requires no migration when that happens.
 
 import Foundation
 

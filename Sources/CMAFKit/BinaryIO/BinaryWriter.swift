@@ -8,9 +8,10 @@
 // use. Reference: ISO/IEC 14496-12 §4.2 (object structured representation —
 // including the `size = 1` largesize convention and the `uuid` extended type).
 //
-// Per addendum F.7 there is no separate `ISOBoxWriter`. All ISOBMFF writes go
-// through `BinaryWriter.writeBox` / `writeFullBox` plus each box's per-instance
-// `encode(to:)`.
+// CMAFKit deliberately provides no separate `ISOBoxWriter` type: every
+// ISOBMFF write flows through `BinaryWriter.writeBox` / `writeFullBox` plus
+// the per-instance `encode(to:)` on each box conformer. The framing logic
+// lives in one place; box-specific bodies are produced by their owners.
 
 import Foundation
 
@@ -275,6 +276,37 @@ public struct BinaryWriter: Sendable {
         } else {
             writeUInt32(UInt32(standardTotal))
             writeFourCC(type)
+        }
+    }
+}
+
+extension BinaryWriter {
+    /// Write a box whose on-wire type is `"uuid"` with a 16-byte extended user
+    /// type after the standard header, followed by the body.
+    ///
+    /// Reference: ISO/IEC 14496-12 §4.2 (extended user type / `uuid` box).
+    ///
+    /// Automatically selects the 64-bit largesize encoding when the total box
+    /// size would otherwise exceed `UInt32.max`.
+    public mutating func writeUUIDBox(extendedType: UUID, body: Data) {
+        // Total: 8 (standard header) + 16 (uuid) + body.count.
+        let bodyBytes = UInt64(body.count)
+        let standardTotal = bodyBytes &+ 8 &+ 16  // size + type + extendedType + body
+
+        if standardTotal <= UInt64(UInt32.max) {
+            // Standard 24-byte header form.
+            writeUInt32(UInt32(standardTotal))
+            writeFourCC("uuid")
+            writeUUID(extendedType)
+            writeData(body)
+        } else {
+            // Largesize form: 4 (size=1) + 4 (type) + 8 (largesize) + 16 (uuid) + body.
+            let largeTotal = bodyBytes &+ 4 &+ 4 &+ 8 &+ 16
+            writeUInt32(1)
+            writeFourCC("uuid")
+            writeUInt64(largeTotal)
+            writeUUID(extendedType)
+            writeData(body)
         }
     }
 }
