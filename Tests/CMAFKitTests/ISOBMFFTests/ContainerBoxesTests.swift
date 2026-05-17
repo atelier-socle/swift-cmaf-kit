@@ -72,10 +72,10 @@ struct MovieBoxTests {
     }
 
     @Test
-    func mvexAccessorReturnsUnknownBox() async throws {
+    func mvexAccessorReturnsMovieExtends() async throws {
         let header = ISOBoxHeader(type: "moov", size: 0, headerSize: 8)
         let mvexHeader = ISOBoxHeader(type: "mvex", size: 8, headerSize: 8)
-        let mvex = UnknownBox(actualType: "mvex", header: mvexHeader, payload: Data())
+        let mvex = MovieExtendsBox(header: mvexHeader, children: [])
         let movie = MovieBox(header: header, children: [mvex])
         #expect(movie.movieExtends != nil)
     }
@@ -433,11 +433,17 @@ struct EditBoxTests {
     }
 
     @Test
-    func unknownElstChildRoundTrip() async throws {
+    func unknownChildRoundTrip() async throws {
+        // Use a truly unregistered FourCC inside edts so the child round-trips
+        // through UnknownBox without colliding with elst, which is now typed.
         let header = ISOBoxHeader(type: "edts", size: 0, headerSize: 8)
-        let elstHeader = ISOBoxHeader(type: "elst", size: 12, headerSize: 8)
-        let elst = UnknownBox(actualType: "elst", header: elstHeader, payload: Data([0x00, 0x00, 0x00, 0x00]))
-        let edts = EditBox(header: header, children: [elst])
+        let unknownHeader = ISOBoxHeader(type: "xxxx", size: 12, headerSize: 8)
+        let unknown = UnknownBox(
+            actualType: "xxxx",
+            header: unknownHeader,
+            payload: Data([0x00, 0x00, 0x00, 0x00])
+        )
+        let edts = EditBox(header: header, children: [unknown])
         var w1 = BinaryWriter()
         edts.encode(to: &w1)
         let registry = await BoxRegistry.defaultRegistry()

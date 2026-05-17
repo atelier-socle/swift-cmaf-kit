@@ -14,8 +14,8 @@ import Foundation
 /// Top-level movie container.
 ///
 /// Holds the movie header and one or more track containers. In fragmented
-/// presentations, also contains a movie-extends box (`mvex`, typed in a
-/// later session) declaring the track-fragment defaults.
+/// presentations, also contains a movie-extends box (`mvex`) declaring
+/// the track-fragment defaults.
 public struct MovieBox: ISOContainerBox, Sendable {
     public static let boxType: FourCC = "moov"
 
@@ -43,10 +43,9 @@ public struct MovieBox: ISOContainerBox, Sendable {
         findChild(UserDataBox.self)
     }
 
-    /// Movie-extends sibling, if present. Returned untyped because the
-    /// typed `MovieExtendsBox` lands in a later session.
-    public var movieExtends: (any ISOBox)? {
-        children.first { wireType(of: $0) == "mvex" }
+    /// Movie-extends sibling, if present. Signals a fragmented presentation.
+    public var movieExtends: MovieExtendsBox? {
+        findChild(MovieExtendsBox.self)
     }
 
     public static func parse(

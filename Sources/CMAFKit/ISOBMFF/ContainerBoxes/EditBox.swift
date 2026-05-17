@@ -5,16 +5,14 @@
 //
 // Reference: ISO/IEC 14496-12 §8.6.5 (edit box).
 //
-// Container for the edit list (`elst`), describing track edits (gaps,
-// segments). The `elst` child is typed in a later session.
+// Container for the edit list (`elst`), describing track edits
+// (presentation gaps and timeline segments).
 
 import Foundation
 
 /// Per-track edit-list container.
 ///
-/// Carries a single `elst` child in well-formed files. The typed `elst`
-/// arrives in a later session; until then, the child round-trips via
-/// ``UnknownBox``.
+/// Carries a single `elst` child in well-formed files.
 public struct EditBox: ISOContainerBox, Sendable {
     public static let boxType: FourCC = "edts"
 
@@ -24,6 +22,11 @@ public struct EditBox: ISOContainerBox, Sendable {
     public init(header: ISOBoxHeader, children: [any ISOBox]) {
         self.header = header
         self.children = children
+    }
+
+    /// The edit list child, if present.
+    public var editList: EditListBox? {
+        findChild(EditListBox.self)
     }
 
     public static func parse(

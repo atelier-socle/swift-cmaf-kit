@@ -21,6 +21,7 @@ extension BoxRegistry {
     internal func registerBuiltinBoxes() async {
         registerFoundationalBuiltinBoxes()
         registerSampleTableBuiltinBoxes()
+        registerFragmentationBuiltinBoxes()
     }
 
     // MARK: Foundational built-ins
@@ -209,6 +210,108 @@ extension BoxRegistry {
         }
         register(SubtitleMediaHeaderBox.self) { reader, header, registry in
             try await SubtitleMediaHeaderBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    // MARK: Fragmentation built-ins
+    //
+    // The `mvex` family (movie-extends declarations), the `moof` family
+    // (per-fragment headers and runs), the segment-index family
+    // (`sidx`, `ssix`, `pdin`), the `mfra` family (random-access index),
+    // sample-auxiliary and sample-group boxes, and the edit list.
+
+    /// Registers the fragmentation, indexing, random-access, sample-group,
+    /// sample-auxiliary, and edit-list parsers.
+    private func registerFragmentationBuiltinBoxes() {
+        registerMovieExtendsBoxes()
+        registerMovieFragmentBoxes()
+        registerSegmentIndexBoxes()
+        registerMovieFragmentRandomAccessBoxes()
+        registerSampleGroupBoxes()
+        registerEditListBoxes()
+    }
+
+    /// Registers `mvex`, `mehd`, `trex`.
+    private func registerMovieExtendsBoxes() {
+        register(MovieExtendsBox.self) { reader, header, registry in
+            try await MovieExtendsBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(MovieExtendsHeaderBox.self) { reader, header, registry in
+            try await MovieExtendsHeaderBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(TrackExtendsBox.self) { reader, header, registry in
+            try await TrackExtendsBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    /// Registers `moof`, `mfhd`, `traf`, `tfhd`, `tfdt`, `trun`.
+    private func registerMovieFragmentBoxes() {
+        register(MovieFragmentBox.self) { reader, header, registry in
+            try await MovieFragmentBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(MovieFragmentHeaderBox.self) { reader, header, registry in
+            try await MovieFragmentHeaderBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(TrackFragmentBox.self) { reader, header, registry in
+            try await TrackFragmentBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(TrackFragmentHeaderBox.self) { reader, header, registry in
+            try await TrackFragmentHeaderBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(TrackFragmentDecodeTimeBox.self) { reader, header, registry in
+            try await TrackFragmentDecodeTimeBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(TrackRunBox.self) { reader, header, registry in
+            try await TrackRunBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    /// Registers `sidx`, `ssix`, `pdin`.
+    private func registerSegmentIndexBoxes() {
+        register(SegmentIndexBox.self) { reader, header, registry in
+            try await SegmentIndexBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SubsegmentIndexBox.self) { reader, header, registry in
+            try await SubsegmentIndexBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(ProgressiveDownloadInformationBox.self) { reader, header, registry in
+            try await ProgressiveDownloadInformationBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    /// Registers `mfra`, `tfra`, `mfro`.
+    private func registerMovieFragmentRandomAccessBoxes() {
+        register(MovieFragmentRandomAccessBox.self) { reader, header, registry in
+            try await MovieFragmentRandomAccessBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(TrackFragmentRandomAccessBox.self) { reader, header, registry in
+            try await TrackFragmentRandomAccessBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(MovieFragmentRandomAccessOffsetBox.self) { reader, header, registry in
+            try await MovieFragmentRandomAccessOffsetBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    /// Registers `sbgp`, `sgpd`, `saiz`, `saio`.
+    private func registerSampleGroupBoxes() {
+        register(SampleToGroupBox.self) { reader, header, registry in
+            try await SampleToGroupBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SampleGroupDescriptionBox.self) { reader, header, registry in
+            try await SampleGroupDescriptionBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SampleAuxiliaryInformationSizesBox.self) { reader, header, registry in
+            try await SampleAuxiliaryInformationSizesBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SampleAuxiliaryInformationOffsetsBox.self) { reader, header, registry in
+            try await SampleAuxiliaryInformationOffsetsBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    /// Registers `elst`.
+    private func registerEditListBoxes() {
+        register(EditListBox.self) { reader, header, registry in
+            try await EditListBox.parse(reader: &reader, header: header, registry: registry)
         }
     }
 }

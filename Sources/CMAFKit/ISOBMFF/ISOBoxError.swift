@@ -37,4 +37,14 @@ public enum ISOBoxError: Error, Equatable, Sendable {
     /// A matrix field did not have the required 9 elements
     /// (6 × 16.16 + 3 × 2.30).
     case malformedMatrix
+
+    /// A full box's payload could not be interpreted despite a well-formed
+    /// header. The `reason` field describes the structural inconsistency
+    /// in the body bytes.
+    ///
+    /// Distinct from ``malformedChild``, which signals a failure inside a
+    /// container while parsing its children. ``malformedFullBox`` signals
+    /// that a full-box's own body bytes are inconsistent with the spec's
+    /// invariants for that box type.
+    case malformedFullBox(type: FourCC, reason: String)
 }
