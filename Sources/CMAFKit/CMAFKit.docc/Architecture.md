@@ -14,5 +14,5 @@ CMAFKit follows a strict layered architecture. The dependency rules are document
 - Layer 4 — Encryption, Fragmentation
 - Layer 5 — CMAFProfiles, Reader, Validator
 
-> Important: this article is a stub. Session 12 expands it with diagrams and
-> rationale.
+> Important: this article is a stub. It is expanded with diagrams and full
+> rationale ahead of the 0.1.0 tag.

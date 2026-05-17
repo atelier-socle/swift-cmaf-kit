@@ -22,8 +22,9 @@ import Foundation
 
 /// Colour primaries per ISO/IEC 23001-8 §7.
 ///
-/// **STUB**: only `bt709` and `smpteEG432_P3D65` are defined in Session 1.
-/// Full enum lands in Session 5 with all CICP code points.
+/// **STUB**: only `bt709` and `smpteEG432_P3D65` are defined at this stage.
+/// The full Color module supersedes this declaration with the complete set
+/// of CICP code points when it lands.
 public enum ColorPrimaries: UInt8, Sendable, Hashable {
     case bt709 = 1
     case smpteEG432_P3D65 = 12  // ISO/IEC 23001-8 §7 code point 12 — SMPTE EG 432-1 / Display P3.
@@ -34,28 +35,32 @@ public enum ColorPrimaries: UInt8, Sendable, Hashable {
 
 /// Transfer characteristics per ISO/IEC 23001-8 §7.
 ///
-/// **STUB**: only `bt709` in Session 1. Full enum in Session 5.
+/// **STUB**: only `bt709` at this stage. The full Color module supersedes
+/// this declaration with the complete CICP code-point set.
 public enum TransferCharacteristics: UInt8, Sendable, Hashable {
     case bt709 = 1
 }
 
 /// Matrix coefficients per ISO/IEC 23001-8 §7.
 ///
-/// **STUB**: only `bt709` in Session 1. Full enum in Session 5.
+/// **STUB**: only `bt709` at this stage. The full Color module supersedes
+/// this declaration with the complete CICP code-point set.
 public enum MatrixCoefficients: UInt8, Sendable, Hashable {
     case bt709 = 1
 }
 
 /// HDR10 mastering display metadata per SMPTE ST 2086.
 ///
-/// **STUB**: empty struct in Session 1. Session 5 fills in all fields.
+/// **STUB**: empty struct at this stage. The full Color module fills in
+/// the SMPTE ST 2086 fields when it lands.
 public struct MasteringDisplayMetadata: Sendable, Hashable, Equatable {
     public init() {}
 }
 
 /// Content light level metadata per CTA-861.3.
 ///
-/// **STUB**: empty struct in Session 1. Session 5 fills in `maxCLL`, `maxFALL`.
+/// **STUB**: empty struct at this stage. The full Color module fills in
+/// `maxCLL` and `maxFALL` when it lands.
 public struct ContentLightLevelMetadata: Sendable, Hashable, Equatable {
     public init() {}
 }

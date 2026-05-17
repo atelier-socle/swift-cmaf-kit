@@ -71,3 +71,10 @@ type_name:
   allowed_symbols: ['_']
   min_length: 3
   max_length: 60
+
+# Allow 3-element tuples. ISO/IEC 14496-12 carries the RGB opcolor in `vmhd`
+# as a 3-tuple; storing it as a tuple is the most direct mapping of the
+# standard. Other 3-tuples (matrix triples) are similarly justified.
+large_tuple:
+  warning: 4
+  error: 5

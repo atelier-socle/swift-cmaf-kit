@@ -302,7 +302,9 @@ struct MediaInformationBoxTests {
 
     @Test
     func mediaHeaderChildPicksVmhd() async throws {
-        // 'vmhd' is not registered yet (Session 3), so it round-trips as UnknownBox.
+        // The accessor matches on the on-wire FourCC, so an UnknownBox
+        // stand-in still resolves; the production path now produces a
+        // typed VideoMediaHeaderBox and the accessor resolves equivalently.
         let header = ISOBoxHeader(type: "minf", size: 0, headerSize: 8)
         let vmhdHeader = ISOBoxHeader(type: "vmhd", size: 8, headerSize: 8)
         let vmhd = UnknownBox(actualType: "vmhd", header: vmhdHeader, payload: Data())
@@ -358,10 +360,12 @@ struct DataInformationBoxTests {
 
     @Test
     func unknownChildRoundTrip() async throws {
+        // Use a FourCC with no registered parser so the child round-trips
+        // via UnknownBox. (`dref` is now a typed box.)
         let header = ISOBoxHeader(type: "dinf", size: 0, headerSize: 8)
-        let drefHeader = ISOBoxHeader(type: "dref", size: 8, headerSize: 8)
-        let dref = UnknownBox(actualType: "dref", header: drefHeader, payload: Data())
-        let dinf = DataInformationBox(header: header, children: [dref])
+        let unkHeader = ISOBoxHeader(type: "wxyz", size: 8, headerSize: 8)
+        let unk = UnknownBox(actualType: "wxyz", header: unkHeader, payload: Data())
+        let dinf = DataInformationBox(header: header, children: [unk])
         var w1 = BinaryWriter()
         dinf.encode(to: &w1)
         let registry = await BoxRegistry.defaultRegistry()
@@ -390,14 +394,16 @@ struct SampleTableBoxTests {
 
     @Test
     func multipleUnknownChildrenRoundTrip() async throws {
+        // Use FourCCs with no registered parser so the children round-trip
+        // via UnknownBox. (`stsd`, `stts`, `stsz` are now typed boxes.)
         let header = ISOBoxHeader(type: "stbl", size: 0, headerSize: 8)
-        let h1 = ISOBoxHeader(type: "stsd", size: 8, headerSize: 8)
-        let h2 = ISOBoxHeader(type: "stts", size: 8, headerSize: 8)
-        let h3 = ISOBoxHeader(type: "stsz", size: 8, headerSize: 8)
+        let h1 = ISOBoxHeader(type: "wxy1", size: 8, headerSize: 8)
+        let h2 = ISOBoxHeader(type: "wxy2", size: 8, headerSize: 8)
+        let h3 = ISOBoxHeader(type: "wxy3", size: 8, headerSize: 8)
         let children: [any ISOBox] = [
-            UnknownBox(actualType: "stsd", header: h1, payload: Data()),
-            UnknownBox(actualType: "stts", header: h2, payload: Data()),
-            UnknownBox(actualType: "stsz", header: h3, payload: Data())
+            UnknownBox(actualType: "wxy1", header: h1, payload: Data()),
+            UnknownBox(actualType: "wxy2", header: h2, payload: Data()),
+            UnknownBox(actualType: "wxy3", header: h3, payload: Data())
         ]
         let stbl = SampleTableBox(header: header, children: children)
         var w1 = BinaryWriter()

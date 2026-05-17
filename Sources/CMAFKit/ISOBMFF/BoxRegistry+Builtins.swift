@@ -17,8 +17,23 @@ extension BoxRegistry {
     /// Called from ``registerBuiltins()``. Each registration maps a FourCC
     /// to the corresponding box type's static
     /// `parse(reader:header:registry:)` factory. The registrations are
-    /// split across helper methods grouped by structural role.
+    /// split across category methods so the file stays scannable.
     internal func registerBuiltinBoxes() async {
+        registerFoundationalBuiltinBoxes()
+        registerSampleTableBuiltinBoxes()
+    }
+
+    // MARK: Foundational built-ins
+    //
+    // File-type and segment-type identifiers, free-space placeholders,
+    // raw media data, opaque uuid extensions, the top-level container
+    // chain, the protection-scheme info group, and the header full
+    // boxes (`mvhd`, `tkhd`, `mdhd`, `hdlr`).
+
+    /// Registers the foundational box parsers: leaf simple boxes,
+    /// container boxes, protection-scheme info family, and header full
+    /// boxes.
+    private func registerFoundationalBuiltinBoxes() {
         registerLeafSimpleBoxes()
         registerContainerBoxes()
         registerProtectionSchemeBoxes()
@@ -113,6 +128,87 @@ extension BoxRegistry {
         }
         register(HandlerReferenceBox.self) { reader, header, registry in
             try await HandlerReferenceBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    // MARK: Sample-table built-ins
+    //
+    // The contents of `stbl` (`stsd` plus the lazy-table boxes), the
+    // data reference family (`dref` / `url` / `urn`), and the four
+    // codec-specific media headers (`vmhd` / `smhd` / `nmhd` / `sthd`).
+
+    /// Registers the sample-table family, data reference family, and
+    /// codec-specific media headers.
+    private func registerSampleTableBuiltinBoxes() {
+        registerSampleTableLeafBoxes()
+        registerDataReferenceBoxes()
+        registerMediaHeaderBoxes()
+    }
+
+    /// Registers the children of `stbl`: `stsd`, `stts`, `ctts`, `stsc`,
+    /// `stsz`, `stz2`, `stco`, `co64`, `stss`, `sdtp`, `padb`.
+    private func registerSampleTableLeafBoxes() {
+        register(SampleDescriptionBox.self) { reader, header, registry in
+            try await SampleDescriptionBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(TimeToSampleBox.self) { reader, header, registry in
+            try await TimeToSampleBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(CompositionOffsetBox.self) { reader, header, registry in
+            try await CompositionOffsetBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SampleToChunkBox.self) { reader, header, registry in
+            try await SampleToChunkBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SampleSizeBox.self) { reader, header, registry in
+            try await SampleSizeBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(CompactSampleSizeBox.self) { reader, header, registry in
+            try await CompactSampleSizeBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(ChunkOffsetBox.self) { reader, header, registry in
+            try await ChunkOffsetBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(ChunkLargeOffsetBox.self) { reader, header, registry in
+            try await ChunkLargeOffsetBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SyncSampleBox.self) { reader, header, registry in
+            try await SyncSampleBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SampleDependencyTypeBox.self) { reader, header, registry in
+            try await SampleDependencyTypeBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(PaddingBitsBox.self) { reader, header, registry in
+            try await PaddingBitsBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    /// Registers `dref`, `url `, `urn ` (trailing space in the FourCCs).
+    private func registerDataReferenceBoxes() {
+        register(DataReferenceBox.self) { reader, header, registry in
+            try await DataReferenceBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(DataEntryURLBox.self) { reader, header, registry in
+            try await DataEntryURLBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(DataEntryURNBox.self) { reader, header, registry in
+            try await DataEntryURNBox.parse(reader: &reader, header: header, registry: registry)
+        }
+    }
+
+    /// Registers `vmhd`, `smhd`, `nmhd`, `sthd`.
+    private func registerMediaHeaderBoxes() {
+        register(VideoMediaHeaderBox.self) { reader, header, registry in
+            try await VideoMediaHeaderBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SoundMediaHeaderBox.self) { reader, header, registry in
+            try await SoundMediaHeaderBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(NullMediaHeaderBox.self) { reader, header, registry in
+            try await NullMediaHeaderBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(SubtitleMediaHeaderBox.self) { reader, header, registry in
+            try await SubtitleMediaHeaderBox.parse(reader: &reader, header: header, registry: registry)
         }
     }
 }

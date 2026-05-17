@@ -6,7 +6,9 @@ import CMAFKit
 
 /// `cmafkit-cli` — command-line interface for CMAFKit.
 ///
-/// Subcommands land in Session 12 per the primary spec §20.
+/// Subcommands ship in the 0.1.0 release. The current binary prints its
+/// version and exits; this stub will be replaced by the full subcommand
+/// suite before tag.
 @main
 struct CMAFKitCLI: ParsableCommand {
     static let configuration = CommandConfiguration(
@@ -16,6 +18,6 @@ struct CMAFKitCLI: ParsableCommand {
     )
 
     func run() throws {
-        print("cmafkit-cli \(CMAFKitVersion) — subcommands land in Session 12.")
+        print("cmafkit-cli \(CMAFKitVersion) — pre-release. Subcommands ship at 0.1.0.")
     }
 }

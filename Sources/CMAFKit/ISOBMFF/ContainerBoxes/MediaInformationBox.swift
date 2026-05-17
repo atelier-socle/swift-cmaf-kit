@@ -32,13 +32,35 @@ public struct MediaInformationBox: ISOContainerBox, Sendable {
 
     /// The codec-specific media header child (`vmhd`, `smhd`, `nmhd`, or
     /// `sthd`). Returns the first child whose FourCC matches one of those
-    /// values. Typed accessors for each variant arrive in a later session.
+    /// values. Use the typed accessors below when the track type is known.
     public var mediaHeaderChild: (any ISOBox)? {
         let mediaHeaderTypes: Set<FourCC> = ["vmhd", "smhd", "nmhd", "sthd"]
         for child in children where mediaHeaderTypes.contains(wireType(of: child)) {
             return child
         }
         return nil
+    }
+
+    /// Video media header (`vmhd`), if present. Video tracks always have one.
+    public var videoMediaHeader: VideoMediaHeaderBox? {
+        findChild(VideoMediaHeaderBox.self)
+    }
+
+    /// Sound media header (`smhd`), if present. Audio tracks always have one.
+    public var soundMediaHeader: SoundMediaHeaderBox? {
+        findChild(SoundMediaHeaderBox.self)
+    }
+
+    /// Null media header (`nmhd`), if present. Used by metadata, hint, and
+    /// other generic tracks without a codec-specific media header.
+    public var nullMediaHeader: NullMediaHeaderBox? {
+        findChild(NullMediaHeaderBox.self)
+    }
+
+    /// Subtitle media header (`sthd`), if present. Subtitle and closed-
+    /// caption tracks always have one.
+    public var subtitleMediaHeader: SubtitleMediaHeaderBox? {
+        findChild(SubtitleMediaHeaderBox.self)
     }
 
     public static func parse(

@@ -7,10 +7,11 @@ Command-line interface for CMAFKit.
 `cmafkit-cli` exposes inspection, validation, and codec-extraction subcommands
 on top of the CMAFKit library.
 
-> Important: subcommands ship in Session 12 of the 0.1.0 implementation plan.
+> Important: subcommands ship with the 0.1.0 release. This stub is updated
+> as each subcommand lands.
 
 ## Topics
 
 ### Commands
 
-(populated in Session 12)
+(populated as subcommands land)

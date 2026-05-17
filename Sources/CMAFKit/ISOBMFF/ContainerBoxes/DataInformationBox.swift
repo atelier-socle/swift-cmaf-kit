@@ -6,16 +6,13 @@
 // Reference: ISO/IEC 14496-12 §8.7.1 (data information box).
 //
 // Container for the data reference box (`dref`), which lists the sources
-// of the media data referenced by the track. Typed children are
-// implemented in a later session.
+// of the media data referenced by the track.
 
 import Foundation
 
 /// Per-track data-information container.
 ///
-/// Carries a single `dref` child in well-formed files. The typed `dref`
-/// arrives in a later session; until then, the child round-trips via
-/// ``UnknownBox``.
+/// Carries a single `dref` child in well-formed files.
 public struct DataInformationBox: ISOContainerBox, Sendable {
     public static let boxType: FourCC = "dinf"
 
@@ -25,6 +22,11 @@ public struct DataInformationBox: ISOContainerBox, Sendable {
     public init(header: ISOBoxHeader, children: [any ISOBox]) {
         self.header = header
         self.children = children
+    }
+
+    /// Data reference (`dref`), if present.
+    public var dataReference: DataReferenceBox? {
+        findChild(DataReferenceBox.self)
     }
 
     public static func parse(
