@@ -22,6 +22,7 @@ extension BoxRegistry {
         registerFoundationalBuiltinBoxes()
         registerSampleTableBuiltinBoxes()
         registerFragmentationBuiltinBoxes()
+        registerColorBuiltinBoxes()
     }
 
     // MARK: Foundational built-ins

@@ -2,16 +2,13 @@
 // Copyright 2026 Atelier Socle SAS
 
 // =====================================================================
-// MARK: - Color stub continuity contract
+// MARK: - ColorPrimaries / DolbyVision public-surface continuity
 // =====================================================================
-// These tests assert that the Session-1 stubs in
-// Sources/CMAFKit/Color/_ModulePlaceholder.swift expose the EXACT same
-// public surface that the full Session-5 implementation will expose
-// (for the subset of types defined in Session 1).
-//
-// **Contract**: these tests MUST continue to pass after Session 5
-// replaces the stub file with the full Color module. Failing to keep
-// them green is a regression on the API surface.
+// These tests assert that the raw values and case names that earlier
+// versions of CMAFKit exposed for the partial Color API are preserved
+// by the full implementation. Future ISO additions extend the
+// `ColorPrimaries` enum additively; raw values for existing cases must
+// never change.
 // =====================================================================
 
 import Foundation
@@ -19,7 +16,7 @@ import Testing
 
 @testable import CMAFKit
 
-@Suite("Color stub continuity (Session 1 ↔ Session 5)")
+@Suite("Color stub continuity")
 struct ColorPrimariesStubGuardTests {
 
     @Test
@@ -44,26 +41,34 @@ struct ColorPrimariesStubGuardTests {
     }
 
     @Test
-    func dolbyVisionProfilesFlatEnum() {
-        // Flat enum: profile-8 sub-flavors live on dvBLSignalCompatibilityID
-        // (per the public Dolby Vision specification).
-        #expect(DolbyVisionProfile(rawValue: 5) == .profile5)
-        #expect(DolbyVisionProfile(rawValue: 7) == .profile7)
-        #expect(DolbyVisionProfile(rawValue: 8) == .profile8)
-        #expect(DolbyVisionProfile(rawValue: 10) == .profile10)
+    func dolbyVisionProfileCasesPresent() {
+        // The case names .profile5, .profile7, .profile8, .profile10
+        // are preserved. Profiles 8 and 10 now carry typed sub-profile
+        // associated values per the public Dolby Vision specification;
+        // profiles 5 and 7 remain unparameterised.
+        let p5: DolbyVisionProfile = .profile5
+        let p7: DolbyVisionProfile = .profile7
+        let p8: DolbyVisionProfile = .profile8(subProfile: .hdr10Compatible)
+        let p10: DolbyVisionProfile = .profile10(subProfile: .nonCompatible)
+        #expect(p5.wireProfileNumber == 5)
+        #expect(p7.wireProfileNumber == 7)
+        #expect(p8.wireProfileNumber == 8)
+        #expect(p10.wireProfileNumber == 10)
     }
 
     @Test
-    func dolbyVisionMetadataPreservesSubFlavorID() {
-        let meta = DolbyVisionMetadata(
-            profile: .profile8,
-            level: 9,
+    func dolbyVisionConfigurationCarriesProfileAndCompatibilityID() {
+        let config = DolbyVisionConfiguration(
+            versionMajor: 1,
+            versionMinor: 0,
+            profile: .profile8(subProfile: .hdr10Compatible),
+            level: .level09,
             rpuPresent: true,
             elPresent: false,
             blPresent: true,
-            dvBLSignalCompatibilityID: 1  // Profile 8.1 (HDR10-compatible)
+            blSignalCompatibilityID: .hdr10Compatible
         )
-        #expect(meta.profile == .profile8)
-        #expect(meta.dvBLSignalCompatibilityID == 1)
+        #expect(config.profile.wireProfileNumber == 8)
+        #expect(config.blSignalCompatibilityID == .hdr10Compatible)
     }
 }

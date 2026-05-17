@@ -3,10 +3,9 @@
 
 // MARK: - HDRMetadata
 //
-// Top-level HDR metadata struct. References types from the Color module,
-// which are provided as minimal stubs in `Color/_ModulePlaceholder.swift`
-// until the full Color module lands; the stubs preserve the public API
-// surface exactly so this file requires no migration when that happens.
+// Reference: ISO/IEC 23001-8 + SMPTE ST 2086 + CTA-861.3 + Dolby Vision
+// public specification. Aggregates the typed colour-and-HDR metadata
+// surfaces a Media client may want to observe.
 
 import Foundation
 
@@ -29,13 +28,13 @@ public struct HDRMetadata: Sendable, Hashable {
     public let fullRange: Bool
 
     /// HDR10 mastering display metadata (`mdcv`), if available.
-    public let masteringDisplay: MasteringDisplayMetadata?
+    public let masteringDisplay: MasteringDisplayColourVolume?
 
     /// HDR10 content light level metadata (`clli`), if available.
-    public let contentLightLevel: ContentLightLevelMetadata?
+    public let contentLightLevel: ContentLightLevel?
 
-    /// Dolby Vision metadata (`dvcC` / `dvvC`), if available.
-    public let dolbyVision: DolbyVisionMetadata?
+    /// Dolby Vision configuration (`dvcC` / `dvvC`), if available.
+    public let dolbyVision: DolbyVisionConfiguration?
 
     public init(
         dynamicRange: DynamicRange,
@@ -43,9 +42,9 @@ public struct HDRMetadata: Sendable, Hashable {
         transferCharacteristics: TransferCharacteristics,
         matrixCoefficients: MatrixCoefficients,
         fullRange: Bool,
-        masteringDisplay: MasteringDisplayMetadata? = nil,
-        contentLightLevel: ContentLightLevelMetadata? = nil,
-        dolbyVision: DolbyVisionMetadata? = nil
+        masteringDisplay: MasteringDisplayColourVolume? = nil,
+        contentLightLevel: ContentLightLevel? = nil,
+        dolbyVision: DolbyVisionConfiguration? = nil
     ) {
         self.dynamicRange = dynamicRange
         self.colorPrimaries = colorPrimaries
