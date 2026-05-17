@@ -1,0 +1,73 @@
+# SwiftLint Configuration — swift-cmaf-kit
+# Swift 6.2 strict concurrency library
+
+# Paths to exclude
+excluded:
+  - .build
+  - Tests/CMAFKitTests/Fixtures
+
+# Enabled rules (opt-in)
+opt_in_rules:
+  - force_unwrapping
+  - force_cast
+  - force_try
+  - vertical_whitespace
+  - file_length
+  - function_body_length
+  - type_body_length
+  - cyclomatic_complexity
+  - nesting
+  - todo
+
+# Disabled rules
+disabled_rules:
+  - identifier_name
+  - blanket_disable_command
+  - trailing_whitespace
+  - opening_brace
+  - inclusive_language
+  # Conflicts with swift-format's MultiElementCollectionTrailingCommas rule.
+  - trailing_comma
+  # `String(decoding: bytes, as: UTF8.self)` is idiomatic when the byte source
+  # is known to be valid (FourCC ASCII, language-code packing, etc.).
+  - optional_data_string_conversion
+
+# Rule configurations
+line_length:
+  warning: 150
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+  ignores_interpolated_strings: true
+
+file_length:
+  warning: 500
+  error: 1000
+  ignore_comment_only_lines: true
+
+function_body_length:
+  warning: 60
+  error: 100
+
+type_body_length:
+  warning: 300
+  error: 500
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+nesting:
+  type_level: 2
+  function_level: 3
+
+vertical_whitespace:
+  max_empty_lines: 2
+
+# Allow the `_<Module>Placeholder` type pattern (one of these per module folder
+# while the module is unimplemented). The leading underscore signals "internal,
+# do not depend on this type — it's gone in a later session."
+type_name:
+  allowed_symbols: ['_']
+  min_length: 3
+  max_length: 60

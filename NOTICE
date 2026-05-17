@@ -1,0 +1,17 @@
+CMAFKit (swift-cmaf-kit)
+Copyright 2026 Atelier Socle SAS
+https://www.atelier-socle.com
+
+This product is licensed under the Apache License, Version 2.0.
+See the LICENSE file for the full license text.
+
+Original author: Wlad (https://github.com/Sweefties)
+Organization: Atelier Socle (https://github.com/atelier-socle)
+
+Third-party components:
+
+* swift-crypto (https://github.com/apple/swift-crypto)
+  Licensed under Apache 2.0. Linked only on Linux platforms.
+
+* swift-argument-parser (https://github.com/apple/swift-argument-parser)
+  Licensed under Apache 2.0. Linked only by the cmafkit-cli executable.

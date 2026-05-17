@@ -1,0 +1,107 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Atelier Socle SAS
+
+# release.yml — Build and publish cmafkit-cli binaries on tag push.
+#
+# Triggers on semver tags WITHOUT "v" prefix (e.g. 0.1.0, 1.2.3).
+# Builds for macOS (arm64) and Linux (x86_64), then creates a GitHub
+# Release with both archives attached.
+
+name: Release
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------- macOS arm64 ----------
+  build-macos-arm64:
+    name: "Build (macOS arm64)"
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.4.app
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build release
+        run: swift build -c release --product cmafkit-cli
+
+      - name: Package binary
+        run: |
+          mkdir -p dist
+          cp .build/release/cmafkit-cli dist/
+          cd dist
+          tar czf cmafkit-cli-macos-arm64.tar.gz cmafkit-cli
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cmafkit-cli-macos-arm64
+          path: dist/cmafkit-cli-macos-arm64.tar.gz
+
+  # ---------- Linux x86_64 ----------
+  build-linux-x86_64:
+    name: "Build (Linux x86_64)"
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.2
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build release
+        run: swift build -c release --product cmafkit-cli
+
+      - name: Package binary
+        run: |
+          mkdir -p dist
+          cp .build/release/cmafkit-cli dist/
+          cd dist
+          tar czf cmafkit-cli-linux-x86_64.tar.gz cmafkit-cli
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: cmafkit-cli-linux-x86_64
+          path: dist/cmafkit-cli-linux-x86_64.tar.gz
+
+  # ---------- GitHub Release ----------
+  release:
+    name: "Create Release"
+    runs-on: ubuntu-latest
+    needs: [build-macos-arm64, build-linux-x86_64]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: cmafkit-cli-macos-arm64
+          path: artifacts-macos
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: cmafkit-cli-linux-x86_64
+          path: artifacts-linux
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts-macos/cmafkit-cli-macos-arm64.tar.gz
+            artifacts-linux/cmafkit-cli-linux-x86_64.tar.gz

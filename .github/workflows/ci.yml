@@ -1,0 +1,58 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install swift-format and swiftlint
+        run: brew install swift-format swiftlint
+      - name: swift-format lint
+        run: swift-format lint --recursive Sources/ Tests/
+      - name: swiftlint strict
+        run: swiftlint lint --strict
+      - name: Forbidden patterns
+        run: |
+          set -e
+          for p in "@unchecked Sendable" "nonisolated(unsafe)" "@preconcurrency" "Task.detached" "try!" "fatalError(" "swiftlint:disable" "import XCTest"; do
+            n=$(grep -rn "$p" Sources/ Tests/ 2>/dev/null | grep -v "LockedState" | wc -l | tr -d ' ')
+            if [ "$n" != "0" ]; then
+              echo "❌ Forbidden pattern '$p' found $n time(s)"
+              grep -rn "$p" Sources/ Tests/ | grep -v "LockedState" || true
+              exit 1
+            fi
+          done
+
+  build-test-macos:
+    runs-on: macos-26
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: swift build
+        run: swift build
+      - name: swift build -c release
+        run: swift build -c release
+      - name: swift test
+        run: swift test
+
+  build-test-linux:
+    runs-on: ubuntu-22.04
+    needs: lint
+    container: swift:6.2-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - name: swift build
+        run: swift build
+      - name: swift build -c release
+        run: swift build -c release
+      - name: swift test
+        run: swift test

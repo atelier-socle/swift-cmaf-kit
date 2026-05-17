@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Atelier Socle SAS
+
+coverage:
+  status:
+    project:
+      default:
+        target: 97%
+        threshold: 0.5%
+ignore:
+  - "Sources/CMAFKitCLI/Commands/**"   # CLI argument-parsing boilerplate
+  - "Tests/**"
+  - ".build/**"

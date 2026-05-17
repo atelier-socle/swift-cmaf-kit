@@ -1,0 +1,42 @@
+# === Swift / SPM ===
+.build/
+.swiftpm/
+Package.resolved
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+
+# === macOS ===
+.DS_Store
+**/.DS_Store
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# === Code coverage ===
+codecov/
+*.profdata
+*.profraw
+
+# === Archives ===
+*.tar.gz
+*.zip
+
+# === DocC outputs ===
+docs/
+*.doccarchive
+
+# === CI artefacts ===
+artefacts/
+
+# === Claude Code (local tooling) ===
+CLAUDE.md
+.claude/
+
+# === Local scripts (not committed) ===
+scripts/safe-test.sh

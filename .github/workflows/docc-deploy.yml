@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Atelier Socle SAS
+
+# docc-deploy.yml — Deploy DocC documentation to GitHub Pages.
+#
+# Builds and merges the CMAFKit + CMAFKitCLI catalogs into a single archive
+# (per addendum F.1), then publishes the static-hosting tree to GitHub Pages
+# at https://atelier-socle.github.io/swift-cmaf-kit/
+
+name: DocC
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: "Deploy DocC"
+    runs-on: macos-26
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.4.app
+
+      - name: Build CMAFKit documentation
+        run: |
+          swift package --allow-writing-to-directory docs \
+            generate-documentation \
+            --target CMAFKit \
+            --output-path docs/CMAFKit.doccarchive \
+            --transform-for-static-hosting \
+            --hosting-base-path swift-cmaf-kit \
+            --disable-indexing
+
+      - name: Build CMAFKitCLI documentation
+        run: |
+          swift package --allow-writing-to-directory docs \
+            generate-documentation \
+            --target CMAFKitCLI \
+            --output-path docs/CMAFKitCLI.doccarchive \
+            --transform-for-static-hosting \
+            --hosting-base-path swift-cmaf-kit \
+            --disable-indexing
+
+      - name: Merge archives
+        run: |
+          rm -rf docs/merged
+          xcrun docc merge \
+            docs/CMAFKit.doccarchive \
+            docs/CMAFKitCLI.doccarchive \
+            --output-path docs/merged
+
+      - name: Add root redirect
+        run: |
+          echo '<meta http-equiv="refresh" content="0; url=documentation/cmafkit/" />' > docs/merged/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: docs/merged
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

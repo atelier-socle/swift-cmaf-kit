@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Atelier Socle SAS
+
+# coverage-report.yml — Test with coverage instrumentation and upload to Codecov.
+
+name: Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: coverage-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: "Coverage (macOS)"
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.4.app
+
+      - name: Swift version
+        run: swift --version
+
+      - name: swift test --enable-code-coverage
+        run: swift test --enable-code-coverage
+
+      - name: Locate coverage data
+        id: cov
+        run: |
+          BIN_PATH=$(swift build --show-bin-path)
+          PROFDATA=$(find .build -name 'default.profdata' | head -n1)
+          XCTEST=$(find "$BIN_PATH" -name 'swift-cmaf-kitPackageTests.xctest' -print -quit)
+          if [ -z "$XCTEST" ]; then
+            XCTEST=$(find "$BIN_PATH" -name '*PackageTests.xctest' -print -quit)
+          fi
+          echo "profdata=$PROFDATA" >> "$GITHUB_OUTPUT"
+          echo "xctest=$XCTEST" >> "$GITHUB_OUTPUT"
+
+      - name: Generate lcov report
+        run: |
+          xcrun llvm-cov export \
+            "${{ steps.cov.outputs.xctest }}/Contents/MacOS/$(basename "${{ steps.cov.outputs.xctest }}" .xctest)" \
+            -instr-profile="${{ steps.cov.outputs.profdata }}" \
+            -format=lcov \
+            -ignore-filename-regex='(\.build|Tests|CMAFKitCLI/Commands)' \
+            > coverage.lcov
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.lcov
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
