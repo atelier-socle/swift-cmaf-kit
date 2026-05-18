@@ -44,9 +44,11 @@ struct SampleDescriptionBoxTests {
 
     @Test
     func multipleRawSampleEntriesPreserveOrder() async throws {
-        let avc = RawSampleEntry(format: "avc1", dataReferenceIndex: 1, payload: Data([0xAA]))
-        let hev = RawSampleEntry(format: "hvc1", dataReferenceIndex: 1, payload: Data([0xBB]))
-        let original = SampleDescriptionBox(entries: [avc, hev])
+        // Use truly unregistered FourCCs so the fallback path is exercised
+        // (typed codec FourCCs such as avc1 / hvc1 now have dedicated parsers).
+        let one = RawSampleEntry(format: "abcd", dataReferenceIndex: 1, payload: Data([0xAA]))
+        let two = RawSampleEntry(format: "efgh", dataReferenceIndex: 1, payload: Data([0xBB]))
+        let original = SampleDescriptionBox(entries: [one, two])
         var writer = BinaryWriter()
         original.encode(to: &writer)
         let registry = await BoxRegistry.defaultRegistry()
@@ -56,8 +58,8 @@ struct SampleDescriptionBoxTests {
         #expect(parsed.entries.count == 2)
         let first = try #require(parsed.entries[0] as? RawSampleEntry)
         let second = try #require(parsed.entries[1] as? RawSampleEntry)
-        #expect(first.format == "avc1")
-        #expect(second.format == "hvc1")
+        #expect(first.format == "abcd")
+        #expect(second.format == "efgh")
     }
 
     @Test

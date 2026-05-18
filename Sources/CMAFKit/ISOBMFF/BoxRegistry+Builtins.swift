@@ -23,6 +23,7 @@ extension BoxRegistry {
         registerSampleTableBuiltinBoxes()
         registerFragmentationBuiltinBoxes()
         registerColorBuiltinBoxes()
+        registerVideoSampleEntryBuiltinBoxes()
     }
 
     // MARK: Foundational built-ins
