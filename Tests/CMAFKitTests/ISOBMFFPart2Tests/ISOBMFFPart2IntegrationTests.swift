@@ -14,7 +14,9 @@ struct ISOBMFFPart2IntegrationTests {
     /// Builds the synthetic `stbl` used by ``completeStblRoundTrip``.
     private func buildCompleteStbl() -> SampleTableBox {
         let stsd = SampleDescriptionBox(entries: [
-            RawSampleEntry(format: "mp4a", dataReferenceIndex: 1, payload: Data([0x01, 0x02]))
+            // Use an unregistered FourCC so the RawSampleEntry fallback is
+            // exercised. Typed audio entries are covered by their own tests.
+            RawSampleEntry(format: "xyz1", dataReferenceIndex: 1, payload: Data([0x01, 0x02]))
         ])
         let stts = TimeToSampleBox(
             table: TimeToSampleTable(entries: [
@@ -88,7 +90,8 @@ struct ISOBMFFPart2IntegrationTests {
         let dinf = DataInformationBox(header: dinfHeader, children: [dref])
 
         let stsd = SampleDescriptionBox(entries: [
-            RawSampleEntry(format: "mp4a", dataReferenceIndex: 1, payload: Data([0xAA]))
+            // Unregistered FourCC keeps this test on the RawSampleEntry path.
+            RawSampleEntry(format: "xyz1", dataReferenceIndex: 1, payload: Data([0xAA]))
         ])
         let stts = TimeToSampleBox(
             table: TimeToSampleTable(entries: [

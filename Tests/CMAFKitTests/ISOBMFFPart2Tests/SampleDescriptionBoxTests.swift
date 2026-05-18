@@ -25,8 +25,11 @@ struct SampleDescriptionBoxTests {
 
     @Test
     func singleRawSampleEntryRoundTrip() async throws {
+        // Use an unregistered FourCC so the RawSampleEntry fallback is
+        // exercised (typed codec FourCCs such as mp4a / avc1 / hvc1 now
+        // have dedicated parsers).
         let entry = RawSampleEntry(
-            format: "mp4a",
+            format: "xyz1",
             dataReferenceIndex: 1,
             payload: Data([0x01, 0x02, 0x03, 0x04])
         )

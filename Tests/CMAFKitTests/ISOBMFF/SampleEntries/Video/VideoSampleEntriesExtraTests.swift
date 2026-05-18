@@ -5,6 +5,7 @@ import Foundation
 import Testing
 
 @testable import CMAFKit
+
 @Suite("VP8SampleEntry / VP9SampleEntry")
 struct VPSampleEntryTests {
 

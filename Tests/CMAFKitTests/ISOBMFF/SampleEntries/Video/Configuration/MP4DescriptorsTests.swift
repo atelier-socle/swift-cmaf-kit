@@ -5,6 +5,7 @@ import Foundation
 import Testing
 
 @testable import CMAFKit
+
 @Suite("MP4ObjectTypeIndication")
 struct MP4ObjectTypeIndicationTests {
 
