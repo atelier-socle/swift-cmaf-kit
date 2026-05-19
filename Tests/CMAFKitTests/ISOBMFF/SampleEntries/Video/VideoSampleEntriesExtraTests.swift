@@ -199,11 +199,40 @@ struct MP4VisualSampleEntryTests {
 @Suite("EncryptedVideoSampleEntry (encv)")
 struct EncryptedVideoSampleEntryTests {
 
+    private static func makeAVCConfig() -> AVCDecoderConfigurationRecord {
+        AVCDecoderConfigurationRecord(
+            profileIndication: .baseline,
+            profileCompatibility: AVCProfileCompatibility(rawValue: 0xE0),
+            levelIndication: .level3,
+            lengthSize: .fourBytes,
+            sequenceParameterSets: [AVCParameterSet(rbspBytes: Data([0x67, 0x42, 0xC0, 0x1E]))],
+            pictureParameterSets: [AVCParameterSet(rbspBytes: Data([0x68, 0xCE, 0x3C, 0x80]))]
+        )
+    }
+
+    private static func makeCENCSinf() -> ProtectionSchemeInfoBox {
+        let frma = OriginalFormatBox(dataFormat: "avc1")
+        let schm = SchemeTypeBox(schemeType: .cenc)
+        let tenc = TrackEncryptionBox(
+            version: 0,
+            defaultIsProtected: true,
+            defaultPerSampleIVSize: .eight,
+            defaultKID: KeyIdentifier(rawBytes: Data(repeating: 0xC3, count: 16))
+        )
+        let schi = SchemeInformationBox(trackEncryption: tenc)
+        return ProtectionSchemeInfoBox(
+            originalFormat: frma,
+            schemeType: schm,
+            schemeInformation: schi
+        )
+    }
+
     @Test
-    func emptyOpaqueChildrenRoundTrip() async throws {
+    func avcCENCRoundTrip() async throws {
         let entry = EncryptedVideoSampleEntry(
             visualFields: VisualSampleEntryFields(width: 1920, height: 1080),
-            opaqueChildren: []
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf()
         )
         var writer = BinaryWriter()
         entry.encode(to: &writer)
@@ -212,16 +241,15 @@ struct EncryptedVideoSampleEntryTests {
         let boxes = try await reader.readBoxes(from: writer.data, using: registry)
         let parsed = try #require(boxes.first as? EncryptedVideoSampleEntry)
         #expect(parsed == entry)
+        #expect(parsed.protectionSchemeInfo.originalFormat.dataFormat == "avc1")
     }
 
     @Test
-    func opaqueChildPreserved() async throws {
-        // Synthesise a fake `sinf` opaque box: 8-byte header + 0-byte body.
-        let sinfBytes = Data([0x00, 0x00, 0x00, 0x08, 0x73, 0x69, 0x6E, 0x66])
-        let opaque = ISOBoxOpaque(boxType: "sinf", rawBytes: sinfBytes)
+    func sinfPreservedRoundTrip() async throws {
         let entry = EncryptedVideoSampleEntry(
             visualFields: VisualSampleEntryFields(width: 1920, height: 1080),
-            opaqueChildren: [opaque]
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf()
         )
         var w1 = BinaryWriter()
         entry.encode(to: &w1)
@@ -229,8 +257,7 @@ struct EncryptedVideoSampleEntryTests {
         let reader = ISOBoxReader()
         let boxes = try await reader.readBoxes(from: w1.data, using: registry)
         let parsed = try #require(boxes.first as? EncryptedVideoSampleEntry)
-        #expect(parsed.opaqueChildren.count == 1)
-        #expect(parsed.opaqueChildren[0].boxType == "sinf")
+        #expect(parsed.protectionSchemeInfo.schemeType?.schemeType == .cenc)
         var w2 = BinaryWriter()
         parsed.encode(to: &w2)
         #expect(w1.data == w2.data)

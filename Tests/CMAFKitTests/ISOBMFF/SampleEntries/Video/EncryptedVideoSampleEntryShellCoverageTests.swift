@@ -9,23 +9,44 @@ import Testing
 @Suite("EncryptedVideoSampleEntry shell coverage")
 struct EncryptedVideoSampleEntryShellCoverageTests {
 
-    private static func makeVisualFields() -> VisualSampleEntryFields {
+    fileprivate static func makeVisualFields() -> VisualSampleEntryFields {
         VisualSampleEntryFields(width: 1920, height: 1080)
     }
 
-    private static func makeOpaque(fourCC: FourCC, payload: Data = Data()) -> ISOBoxOpaque {
-        var w = BinaryWriter()
-        w.writeBox(type: fourCC) { body in
-            body.writeData(payload)
-        }
-        return ISOBoxOpaque(boxType: fourCC, rawBytes: w.data)
+    fileprivate static func makeAVCConfig() -> AVCDecoderConfigurationRecord {
+        AVCDecoderConfigurationRecord(
+            profileIndication: .baseline,
+            profileCompatibility: AVCProfileCompatibility(rawValue: 0xE0),
+            levelIndication: .level3,
+            lengthSize: .fourBytes,
+            sequenceParameterSets: [AVCParameterSet(rbspBytes: Data([0x67, 0x42, 0xC0, 0x1E]))],
+            pictureParameterSets: [AVCParameterSet(rbspBytes: Data([0x68, 0xCE, 0x3C, 0x80]))]
+        )
+    }
+
+    fileprivate static func makeCENCSinf() -> ProtectionSchemeInfoBox {
+        let frma = OriginalFormatBox(dataFormat: "avc1")
+        let schm = SchemeTypeBox(schemeType: .cenc)
+        let tenc = TrackEncryptionBox(
+            version: 0,
+            defaultIsProtected: true,
+            defaultPerSampleIVSize: .eight,
+            defaultKID: KeyIdentifier(rawBytes: Data(repeating: 0x77, count: 16))
+        )
+        let schi = SchemeInformationBox(trackEncryption: tenc)
+        return ProtectionSchemeInfoBox(
+            originalFormat: frma,
+            schemeType: schm,
+            schemeInformation: schi
+        )
     }
 
     @Test
-    func singleOpaqueChildRoundTrip() async throws {
+    func minimalRoundTrip() async throws {
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [Self.makeOpaque(fourCC: "sinf")]
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf()
         )
         var writer = BinaryWriter()
         entry.encode(to: &writer)
@@ -34,31 +55,7 @@ struct EncryptedVideoSampleEntryShellCoverageTests {
         let boxes = try await reader.readBoxes(from: writer.data, using: registry)
         let parsed = try #require(boxes.first as? EncryptedVideoSampleEntry)
         #expect(parsed == entry)
-        #expect(parsed.opaqueChildren.count == 1)
-    }
-
-    @Test
-    func multipleOpaqueChildrenRoundTrip() async throws {
-        let children: [ISOBoxOpaque] = [
-            Self.makeOpaque(fourCC: "sinf", payload: Data([0x01])),
-            Self.makeOpaque(fourCC: "frma", payload: Data([0x02])),
-            Self.makeOpaque(fourCC: "schi", payload: Data([0x03]))
-        ]
-        let entry = EncryptedVideoSampleEntry(
-            visualFields: Self.makeVisualFields(),
-            opaqueChildren: children
-        )
-        var writer = BinaryWriter()
-        entry.encode(to: &writer)
-        let registry = await BoxRegistry.defaultRegistry()
-        let reader = ISOBoxReader()
-        let boxes = try await reader.readBoxes(from: writer.data, using: registry)
-        let parsed = try #require(boxes.first as? EncryptedVideoSampleEntry)
-        #expect(parsed.opaqueChildren.count == 3)
-        #expect(parsed.opaqueChildren[0].boxType == "sinf")
-        #expect(parsed.opaqueChildren[1].boxType == "frma")
-        #expect(parsed.opaqueChildren[2].boxType == "schi")
-        #expect(parsed == entry)
+        #expect(parsed.protectionSchemeInfo.originalFormat.dataFormat == "avc1")
     }
 
     @Test
@@ -75,7 +72,8 @@ struct EncryptedVideoSampleEntryShellCoverageTests {
         )
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(colorInformation: colr)
         )
         var writer = BinaryWriter()
@@ -101,7 +99,8 @@ struct EncryptedVideoSampleEntryShellCoverageTests {
         )
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(masteringDisplay: mdcv)
         )
         var writer = BinaryWriter()
@@ -123,7 +122,8 @@ struct EncryptedVideoSampleEntryShellCoverageTests {
         )
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(contentLightLevel: clli)
         )
         var writer = BinaryWriter()
@@ -140,7 +140,8 @@ struct EncryptedVideoSampleEntryShellCoverageTests {
         let pasp = PixelAspectRatioBox(hSpacing: 1, vSpacing: 1)
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(pixelAspectRatio: pasp)
         )
         var writer = BinaryWriter()
@@ -161,7 +162,8 @@ struct EncryptedVideoSampleEntryShellCoverageTests {
         )
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(bitRate: btrt)
         )
         var writer = BinaryWriter()
@@ -202,7 +204,8 @@ struct EncryptedVideoSampleEntryShellCoverageTests {
         let pasp = PixelAspectRatioBox(hSpacing: 1, vSpacing: 1)
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(
                 colorInformation: colr,
                 masteringDisplay: mdcv,
@@ -221,22 +224,21 @@ struct EncryptedVideoSampleEntryShellCoverageTests {
         #expect(parsed.extensions.contentLightLevel == clli)
         #expect(parsed.extensions.pixelAspectRatio == pasp)
     }
-
 }
 
 @Suite("EncryptedVideoSampleEntry shell coverage — apertures and Dolby Vision")
 struct EncryptedVideoSampleEntryShellCoverageDolbyTests {
 
     private static func makeVisualFields() -> VisualSampleEntryFields {
-        VisualSampleEntryFields(width: 1920, height: 1080)
+        EncryptedVideoSampleEntryShellCoverageTests.makeVisualFields()
     }
 
-    private static func makeOpaque(fourCC: FourCC, payload: Data = Data()) -> ISOBoxOpaque {
-        var w = BinaryWriter()
-        w.writeBox(type: fourCC) { body in
-            body.writeData(payload)
-        }
-        return ISOBoxOpaque(boxType: fourCC, rawBytes: w.data)
+    private static func makeAVCConfig() -> AVCDecoderConfigurationRecord {
+        EncryptedVideoSampleEntryShellCoverageTests.makeAVCConfig()
+    }
+
+    private static func makeCENCSinf() -> ProtectionSchemeInfoBox {
+        EncryptedVideoSampleEntryShellCoverageTests.makeCENCSinf()
     }
 
     @Test
@@ -249,7 +251,8 @@ struct EncryptedVideoSampleEntryShellCoverageDolbyTests {
         )
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(cleanAperture: clap)
         )
         var writer = BinaryWriter()
@@ -277,7 +280,8 @@ struct EncryptedVideoSampleEntryShellCoverageDolbyTests {
         )
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(dolbyVisionConfiguration: dvcC)
         )
         var writer = BinaryWriter()
@@ -303,7 +307,8 @@ struct EncryptedVideoSampleEntryShellCoverageDolbyTests {
         )
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(dolbyVisionELConfiguration: dvvC)
         )
         var writer = BinaryWriter()
@@ -316,7 +321,7 @@ struct EncryptedVideoSampleEntryShellCoverageDolbyTests {
     }
 
     @Test
-    func withOpaqueChildrenAndExtensions() async throws {
+    func withFullEncryptionContextAndColorExtensions() async throws {
         let colr = ColorInformationBox(
             variant: .nclx(
                 NCLXColorInformation(
@@ -327,10 +332,8 @@ struct EncryptedVideoSampleEntryShellCoverageDolbyTests {
         )
         let entry = EncryptedVideoSampleEntry(
             visualFields: Self.makeVisualFields(),
-            opaqueChildren: [
-                Self.makeOpaque(fourCC: "sinf", payload: Data([0xAA, 0xBB])),
-                Self.makeOpaque(fourCC: "frma")
-            ],
+            originalCodecConfiguration: .avc(Self.makeAVCConfig()),
+            protectionSchemeInfo: Self.makeCENCSinf(),
             extensions: VideoSampleEntryExtensions(colorInformation: colr)
         )
         var writer = BinaryWriter()
@@ -339,7 +342,6 @@ struct EncryptedVideoSampleEntryShellCoverageDolbyTests {
         let reader = ISOBoxReader()
         let boxes = try await reader.readBoxes(from: writer.data, using: registry)
         let parsed = try #require(boxes.first as? EncryptedVideoSampleEntry)
-        #expect(parsed.opaqueChildren.count == 2)
         #expect(parsed.extensions.colorInformation == colr)
         #expect(parsed == entry)
     }

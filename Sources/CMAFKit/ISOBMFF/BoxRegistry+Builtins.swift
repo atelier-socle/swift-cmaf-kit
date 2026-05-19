@@ -25,6 +25,7 @@ extension BoxRegistry {
         registerColorBuiltinBoxes()
         registerVideoSampleEntryBuiltinBoxes()
         registerAudioSampleEntryBuiltinBoxes()
+        registerEncryptionBuiltinBoxes()
     }
 
     // MARK: Foundational built-ins
@@ -40,7 +41,6 @@ extension BoxRegistry {
     private func registerFoundationalBuiltinBoxes() {
         registerLeafSimpleBoxes()
         registerContainerBoxes()
-        registerProtectionSchemeBoxes()
         registerHeaderFullBoxes()
     }
 
@@ -96,24 +96,6 @@ extension BoxRegistry {
         }
         register(UserDataBox.self) { reader, header, registry in
             try await UserDataBox.parse(reader: &reader, header: header, registry: registry)
-        }
-    }
-
-    // MARK: Protection-scheme group
-
-    /// Registers `sinf`, `frma`, `schm`, `schi`.
-    private func registerProtectionSchemeBoxes() {
-        register(ProtectionSchemeInfoBox.self) { reader, header, registry in
-            try await ProtectionSchemeInfoBox.parse(reader: &reader, header: header, registry: registry)
-        }
-        register(OriginalFormatBox.self) { reader, header, registry in
-            try await OriginalFormatBox.parse(reader: &reader, header: header, registry: registry)
-        }
-        register(SchemeTypeBox.self) { reader, header, registry in
-            try await SchemeTypeBox.parse(reader: &reader, header: header, registry: registry)
-        }
-        register(SchemeInformationBox.self) { reader, header, registry in
-            try await SchemeInformationBox.parse(reader: &reader, header: header, registry: registry)
         }
     }
 

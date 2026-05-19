@@ -148,19 +148,21 @@ struct ISOBMFFIntegrationTests {
     @Test
     func sinfInsideSyntheticProtectedTrack() async throws {
         // Build a trak whose media is associated with a sinf carrying
-        // frma + schm + (schi with an UnknownBox stand-in for tenc).
+        // frma + schm + schi(tenc) under a CENC scheme.
         let frma = OriginalFormatBox(dataFormat: "avc1")
-        let schm = SchemeTypeBox(schemeType: "cenc", schemeVersion: 0x0001_0000)
-        let tencHeader = ISOBoxHeader(type: "tenc", size: 16, headerSize: 8)
-        let tenc = UnknownBox(
-            actualType: "tenc",
-            header: tencHeader,
-            payload: Data([0x00, 0x00, 0x01, 0x08, 0x10, 0x11, 0x12, 0x13])
+        let schm = SchemeTypeBox(schemeType: .cenc)
+        let tenc = TrackEncryptionBox(
+            version: 0,
+            defaultIsProtected: true,
+            defaultPerSampleIVSize: .eight,
+            defaultKID: KeyIdentifier(rawBytes: Data(repeating: 0x11, count: 16))
         )
-        let schiHeader = ISOBoxHeader(type: "schi", size: 0, headerSize: 8)
-        let schi = SchemeInformationBox(header: schiHeader, children: [tenc])
-        let sinfHeader = ISOBoxHeader(type: "sinf", size: 0, headerSize: 8)
-        let sinf = ProtectionSchemeInfoBox(header: sinfHeader, children: [frma, schm, schi])
+        let schi = SchemeInformationBox(trackEncryption: tenc)
+        let sinf = ProtectionSchemeInfoBox(
+            originalFormat: frma,
+            schemeType: schm,
+            schemeInformation: schi
+        )
 
         let stblHeader = ISOBoxHeader(type: "stbl", size: 0, headerSize: 8)
         let stbl = SampleTableBox(header: stblHeader, children: [sinf])
@@ -178,8 +180,10 @@ struct ISOBMFFIntegrationTests {
         let reader = ISOBoxReader()
         let boxes = try await reader.readBoxes(from: writer.data, using: registry)
 
-        let result = reader.findBox(at: "trak/mdia/minf/stbl/sinf/schm", in: boxes)
-        let parsedSchm = try #require(result as? SchemeTypeBox)
-        #expect(parsedSchm.schemeType == "cenc")
+        let result = reader.findBox(at: "trak/mdia/minf/stbl/sinf", in: boxes)
+        let parsedSinf = try #require(result as? ProtectionSchemeInfoBox)
+        #expect(parsedSinf.originalFormat.dataFormat == "avc1")
+        #expect(parsedSinf.schemeType?.schemeType == .cenc)
+        #expect(parsedSinf.schemeInformation?.trackEncryption?.defaultIsProtected == true)
     }
 }
