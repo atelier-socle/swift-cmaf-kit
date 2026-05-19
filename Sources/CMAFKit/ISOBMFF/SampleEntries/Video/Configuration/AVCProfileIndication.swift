@@ -55,7 +55,7 @@ public enum AVCProfileIndication: UInt8, Sendable, Hashable, CaseIterable, Codab
     public static func requiresHighProfileFields(profileIDC: UInt8) -> Bool {
         // Per ISO/IEC 14496-15 §5.3.3.1.2.
         switch profileIDC {
-        case 100, 110, 122, 144, 44, 83, 86, 118, 128, 138, 139, 134, 135:
+        case 100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 139, 134, 135:
             return true
         default:
             return false
