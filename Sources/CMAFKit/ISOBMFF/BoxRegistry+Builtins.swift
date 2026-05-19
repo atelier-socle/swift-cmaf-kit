@@ -251,7 +251,7 @@ extension BoxRegistry {
         }
     }
 
-    /// Registers `sidx`, `ssix`, `pdin`.
+    /// Registers `sidx`, `ssix`, `pdin`, `prft`, `emsg`.
     private func registerSegmentIndexBoxes() {
         register(SegmentIndexBox.self) { reader, header, registry in
             try await SegmentIndexBox.parse(reader: &reader, header: header, registry: registry)
@@ -261,6 +261,12 @@ extension BoxRegistry {
         }
         register(ProgressiveDownloadInformationBox.self) { reader, header, registry in
             try await ProgressiveDownloadInformationBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(ProducerReferenceTimeBox.self) { reader, header, registry in
+            try await ProducerReferenceTimeBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(EventMessageBox.self) { reader, header, registry in
+            try await EventMessageBox.parse(reader: &reader, header: header, registry: registry)
         }
     }
 
