@@ -20,24 +20,22 @@ struct CMAFMediaSegmentWriterBasicTests {
     }
 
     @Test
-    func subtitleTrackRejected() {
-        #expect(throws: CMAFWriterError.self) {
-            let config = CMAFTrackConfiguration(
-                trackID: 1,
-                kind: .subtitle,
-                profile: .basic,
-                timescale: 1000,
-                language: "eng",
-                subtitleFields: CMAFTrackConfiguration.SubtitleFields(
-                    codec: .webVTT,
-                    language: "eng"
-                )
+    func subtitleTrackAccepted() throws {
+        let config = CMAFTrackConfiguration(
+            trackID: 1,
+            kind: .subtitle,
+            profile: .basic,
+            timescale: 1000,
+            language: "eng",
+            subtitleFields: CMAFTrackConfiguration.SubtitleFields(
+                codec: .webVTT,
+                language: "eng"
             )
-            _ = try CMAFMediaSegmentWriter(
-                configuration: config,
-                fragmentBoundary: .sampleCount(1)
-            )
-        }
+        )
+        _ = try CMAFMediaSegmentWriter(
+            configuration: config,
+            fragmentBoundary: .sampleCount(1)
+        )
     }
 
     @Test

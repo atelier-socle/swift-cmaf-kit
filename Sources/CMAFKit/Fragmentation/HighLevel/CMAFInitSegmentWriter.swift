@@ -85,9 +85,7 @@ public struct CMAFInitSegmentWriter: Sendable {
     /// The output is `ftyp` + moov-level `pssh` boxes (one per
     /// encryption parameter set, in track order) + `moov`.
     public func emit() throws -> Data {
-        let profile = configurations[0].profile
-
-        let ftyp = BrandComposer.makeFileTypeBox(profile: profile)
+        let ftyp = BrandComposer.makeFileTypeBox(configurations: configurations)
         let moov = try MovieTreeBuilder.makeMovieBox(
             configurations: configurations,
             referenceTimestamp: referenceTimestamp,

@@ -120,13 +120,16 @@ public enum SubtitleCodec: Sendable, Hashable, Equatable, Codable, CaseIterable 
 }
 
 /// Kind of timed metadata payload.
-public enum MetadataType: Sendable, Hashable, Equatable, Codable, CaseIterable {
+public enum MetadataType: Sendable, Hashable, Equatable, Codable {
     /// ID3v2 timed-metadata samples per the HLS / ID3 timed metadata
     /// recommendation (handler `meta`, sample entry `id3 `).
     case id3
     /// KLV (Key-Length-Value) timed metadata per SMPTE ST 336.
     case klv
-    /// Generic application-specific metadata (`meta` track with
-    /// consumer-supplied schema).
-    case generic
+    /// Generic text-metadata stream (`mett` sample entry with the
+    /// consumer's MIME identifier).
+    case timedText
+    /// URI-scheme metadata (`urim` sample entry with the supplied
+    /// URI as the scheme identifier).
+    case uri(String)
 }

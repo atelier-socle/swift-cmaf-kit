@@ -26,6 +26,7 @@ extension BoxRegistry {
         registerVideoSampleEntryBuiltinBoxes()
         registerAudioSampleEntryBuiltinBoxes()
         registerEncryptionBuiltinBoxes()
+        registerSubtitleMetadataBuiltinBoxes()
     }
 
     // MARK: Foundational built-ins

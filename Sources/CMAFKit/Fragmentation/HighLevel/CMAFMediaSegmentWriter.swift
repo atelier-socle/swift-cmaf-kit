@@ -4,17 +4,20 @@
 // MARK: - CMAFMediaSegmentWriter
 //
 // Reference: ISO/IEC 23000-19 §7.3 (CMAF Fragment) and ISO/IEC
-// 14496-12 §8.8 (movie fragments / `moof` + `mdat`).
+// 14496-12 §8.8 (movie fragments / `moof` + `mdat`). Reference:
+// IETF RFC 8216bis-13 §B.4.1 (LL-HLS partial chunks). Reference:
+// ISO/IEC 23000-19 §7.3.5.1 (every media segment must begin at a
+// Stream Access Point).
 //
 // Stateful writer actor that accumulates samples per track and emits
 // one media segment (`styp` + optional `sidx` / `prft` / `emsg` +
-// `moof` + `mdat`) per fragment boundary. CMAFKit currently supports
-// the single-track-per-writer case; multi-track interleaving is part
-// of a later sub-session.
+// `moof` + `mdat`) per fragment boundary. When a partial-chunk
+// boundary is supplied, the writer additionally sub-divides each
+// fragment into LL-HLS partial chunks per RFC 8216bis-13 §B.4.1.
 //
 // Safety doctrine: ``finalize()`` is the canonical termination
-// entry point. It transitions the actor to ``State/finalized``
-// and emits any pending fragment. After finalisation, every mutating
+// entry point. It transitions the actor to ``State/finalized`` and
+// emits any pending fragment. After finalisation, every mutating
 // method throws. `deinit` does **not** perform async work — actor
 // isolation precludes it — so consumers must always call
 // ``finalize()`` to recover the trailing fragment.
@@ -25,8 +28,7 @@ import Foundation
 ///
 /// The writer is single-track per instance. Consumers compose
 /// per-track writers (one per `trak`) at the consumer layer; cross-
-/// track interleaving lives outside this 0.1.0 surface and is
-/// scheduled for a later module.
+/// track interleaving is handled at the orchestration layer.
 public actor CMAFMediaSegmentWriter {
 
     /// Lifecycle state.
@@ -48,8 +50,16 @@ public actor CMAFMediaSegmentWriter {
 
     public let configuration: CMAFTrackConfiguration
     public let fragmentBoundary: CMAFFragmentBoundary
+    public let partialChunkBoundary: CMAFPartialChunkBoundary?
     public let emitSegmentIndex: Bool
     public let emitProducerReferenceTime: Bool
+
+    /// Whether the configuration's profile demands LL-HLS chunking.
+    private var requiresPartialChunking: Bool {
+        partialChunkBoundary != nil
+    }
+
+    // MARK: Pending fragment state
 
     private var pendingSamples: [SegmentByteAssembler.WriterSample] = []
     private var pendingDecodeTime: UInt64 = 0
@@ -58,42 +68,61 @@ public actor CMAFMediaSegmentWriter {
     private var nextBaseMediaDecodeTime: UInt64 = 0
     private var attachedEventMessages: [EventMessageBox] = []
 
+    // MARK: Pending partial-chunk state
+
+    /// Samples accumulated in the *current* partial chunk (a strict
+    /// subset of ``pendingSamples`` since the last chunk emit).
+    private var samplesInCurrentChunk: [SegmentByteAssembler.WriterSample] = []
+    /// Duration accumulated in the current partial chunk.
+    private var currentChunkDurationInTimescale: UInt64 = 0
+    /// Decode time at which the current chunk started.
+    private var currentChunkDecodeTime: UInt64 = 0
+    /// Already-emitted chunks for the current fragment.
+    private var pendingFragmentChunks: [CMAFPartialChunk] = []
+
     /// Construct a writer for one track configuration.
     ///
-    /// - Throws: ``CMAFWriterError/configurationInvalid(reason:)``
-    ///   when the configuration is not internally consistent.
+    /// - Throws: ``CMAFWriterError/configurationInvalid(reason:)`` or
+    ///   ``CMAFWriterError/cmafConformanceViolation(rule:)`` when the
+    ///   supplied configuration violates a CMAF / DASH / LL-HLS rule
+    ///   that the writer enforces at construction time.
     public init(
         configuration: CMAFTrackConfiguration,
         fragmentBoundary: CMAFFragmentBoundary,
+        partialChunkBoundary: CMAFPartialChunkBoundary? = nil,
         emitSegmentIndex: Bool = false,
         emitProducerReferenceTime: Bool = false
     ) throws {
-        switch configuration.kind {
-        case .video, .audio:
-            break
-        case .subtitle, .metadata:
-            throw CMAFWriterError.configurationInvalid(
-                reason: "media-segment writer currently supports only video and audio tracks"
-            )
-        }
+        try Self.validate(
+            configuration: configuration,
+            fragmentBoundary: fragmentBoundary,
+            partialChunkBoundary: partialChunkBoundary,
+            emitSegmentIndex: emitSegmentIndex
+        )
         self.configuration = configuration
         self.fragmentBoundary = fragmentBoundary
+        self.partialChunkBoundary = partialChunkBoundary
         self.emitSegmentIndex = emitSegmentIndex
         self.emitProducerReferenceTime = emitProducerReferenceTime
     }
+
+    // MARK: - Public surface
 
     /// Append one sample. Returns zero or more media segments when
     /// fragment boundaries are hit by the appended sample.
     ///
     /// - Throws:
-    ///   - ``CMAFWriterError/sampleInvalid(reason:)`` when the sample
-    ///     violates a basic invariant.
+    ///   - ``CMAFWriterError/sampleInvalid(reason:)`` for invalid
+    ///     sample metadata (track ID mismatch, oversize sample).
     ///   - ``CMAFWriterError/encryptionParametersMissing(track:)``
     ///     when the track is encrypted but the sample carries no
     ///     encryption metadata.
     ///   - ``CMAFWriterError/encryptionIVSizeMismatch(declared:actual:)``
     ///     when the per-sample IV size does not match
     ///     `tenc.defaultPerSampleIVSize`.
+    ///   - ``CMAFWriterError/cmafConformanceViolation(rule:)`` when
+    ///     the runtime SAP check fails (a video fragment is opened
+    ///     by a non-sync sample).
     ///   - ``CMAFWriterError/configurationInvalid(reason:)`` when the
     ///     writer has already been ``finalize()``-ed.
     public func appendSample(
@@ -132,6 +161,17 @@ public actor CMAFMediaSegmentWriter {
 
         if pendingSamples.isEmpty {
             pendingDecodeTime = nextBaseMediaDecodeTime
+            currentChunkDecodeTime = pendingDecodeTime
+            // Runtime SAP check (CMAF §7.3.5.1): the first sample of
+            // every video media segment must be a sync sample.
+            if configuration.kind == .video && !sample.flags.isSyncSample {
+                throw CMAFWriterError.cmafConformanceViolation(
+                    rule:
+                        "CMAF \u{00A7}7.3.5.1: every video media segment must begin "
+                        + "at a Stream Access Point (the first sample of a video "
+                        + "fragment must be a sync sample)"
+                )
+            }
         }
 
         let metadata = FragmentSampleMetadata(
@@ -140,19 +180,32 @@ public actor CMAFMediaSegmentWriter {
             compositionTimeOffset: sample.compositionTimeOffset,
             flags: sample.flags
         )
-        pendingSamples.append(
-            SegmentByteAssembler.WriterSample(
-                metadata: metadata,
-                bytes: sample.bytes,
-                encryption: sample.encryption
-            ))
+        let writerSample = SegmentByteAssembler.WriterSample(
+            metadata: metadata,
+            bytes: sample.bytes,
+            encryption: sample.encryption
+        )
+        pendingSamples.append(writerSample)
         pendingDurationInTimescale += UInt64(sample.durationInTimescale)
+        samplesInCurrentChunk.append(writerSample)
+        currentChunkDurationInTimescale += UInt64(sample.durationInTimescale)
 
         state = .openFragment(
             decodeTime: pendingDecodeTime,
             samples: pendingSamples.count
         )
 
+        // First, evaluate the partial-chunk boundary. A chunk close
+        // happens INSIDE the current fragment, no fragment emission.
+        if requiresPartialChunking,
+            try shouldClosePartialChunk(
+                currentSampleIsSync: sample.flags.isSyncSample
+            )
+        {
+            try emitCurrentPartialChunk()
+        }
+
+        // Now evaluate the fragment boundary.
         if try shouldCloseFragment(currentSampleIsSync: sample.flags.isSyncSample) {
             if let segment = try emitCurrentFragment() {
                 return [segment]
@@ -206,7 +259,7 @@ public actor CMAFMediaSegmentWriter {
         // contract above.
     }
 
-    // MARK: - Internals
+    // MARK: - Boundary evaluation
 
     private func shouldCloseFragment(currentSampleIsSync: Bool) throws -> Bool {
         switch fragmentBoundary {
@@ -216,9 +269,6 @@ public actor CMAFMediaSegmentWriter {
             let thresholdTicks = UInt64(seconds * Double(configuration.timescale))
             return pendingDurationInTimescale >= thresholdTicks
         case .onSyncSample:
-            // Cut *before* the next sync sample (we close once a sync
-            // has been observed and there's at least 2 samples — the
-            // first sample alone never triggers a cut).
             return pendingSamples.count > 1 && currentSampleIsSync
         case .custom(let predicate):
             return predicate(
@@ -231,11 +281,24 @@ public actor CMAFMediaSegmentWriter {
         }
     }
 
+    private func shouldClosePartialChunk(currentSampleIsSync: Bool) throws -> Bool {
+        guard let boundary = partialChunkBoundary else { return false }
+        switch boundary {
+        case .sampleCount(let target):
+            return UInt32(samplesInCurrentChunk.count) >= target
+        case .durationSeconds(let seconds):
+            let thresholdTicks = UInt64(seconds * Double(configuration.timescale))
+            return currentChunkDurationInTimescale >= thresholdTicks
+        case .perSample:
+            return !samplesInCurrentChunk.isEmpty
+        }
+    }
+
+    // MARK: - Fragment + chunk emission
+
     private func emitCurrentFragment() throws -> CMAFFragmentSegment? {
         guard !pendingSamples.isEmpty else { return nil }
 
-        // For .onSyncSample we cut *before* the sync; the sync sample
-        // becomes the lead sample of the next fragment.
         let cutBeforeLast: Bool
         if case .onSyncSample = fragmentBoundary,
             pendingSamples.count > 1,
@@ -256,21 +319,39 @@ public actor CMAFMediaSegmentWriter {
             durationToEmit -= UInt64(last.metadata.durationInTimescale)
         }
 
-        let fragmentBytes = try SegmentByteAssembler.emitFragment(
-            trackID: configuration.trackID,
-            sequenceNumber: nextSequenceNumber,
-            baseMediaDecodeTime: pendingDecodeTime,
-            samples: samplesToEmit,
-            encryption: configuration.encryptionParameters
-        )
+        // Drain any in-flight partial chunk so the fragment closes
+        // on a chunk boundary.
+        if requiresPartialChunking && !samplesInCurrentChunk.isEmpty && holdover == nil {
+            try emitCurrentPartialChunk()
+        }
+
+        let fragmentBytes: Data
+        let chunks: [CMAFPartialChunk]?
+        if requiresPartialChunking {
+            // The fragment bytes are the concatenation of every
+            // chunk emitted for it.
+            chunks = pendingFragmentChunks
+            fragmentBytes = pendingFragmentChunks.reduce(into: Data()) {
+                $0.append($1.bytes)
+            }
+        } else {
+            let assembled = try SegmentByteAssembler.emitFragment(
+                trackID: configuration.trackID,
+                sequenceNumber: nextSequenceNumber,
+                baseMediaDecodeTime: pendingDecodeTime,
+                samples: samplesToEmit,
+                encryption: configuration.encryptionParameters
+            )
+            nextSequenceNumber += 1
+            fragmentBytes = assembled.bytes
+            chunks = nil
+        }
 
         var assembled = Data()
-        // styp first for CMAF media segments per ISO/IEC 14496-12
-        // §8.16.1.
-        let styp = BrandComposer.makeSegmentTypeBox(profile: configuration.profile)
-        var w = BinaryWriter()
-        styp.encode(to: &w)
-        assembled.append(w.data)
+        let styp = BrandComposer.makeSegmentTypeBox(configurations: [configuration])
+        var stypWriter = BinaryWriter()
+        styp.encode(to: &stypWriter)
+        assembled.append(stypWriter.data)
 
         for event in attachedEventMessages {
             var ew = BinaryWriter()
@@ -293,7 +374,7 @@ public actor CMAFMediaSegmentWriter {
 
         if emitSegmentIndex {
             let sidx = makeSegmentIndex(
-                fragmentByteSize: fragmentBytes.bytes.count,
+                fragmentByteSize: fragmentBytes.count,
                 durationInTimescale: durationToEmit,
                 isSyncStart: samplesToEmit.first?.metadata.flags.isSyncSample ?? false
             )
@@ -302,26 +383,39 @@ public actor CMAFMediaSegmentWriter {
             assembled.append(sw.data)
         }
 
-        assembled.append(fragmentBytes.bytes)
+        assembled.append(fragmentBytes)
 
+        let resolvedSequenceNumber: UInt32
+        if let firstChunkCount = chunks?.count, firstChunkCount > 0 {
+            resolvedSequenceNumber = nextSequenceNumber - UInt32(firstChunkCount)
+        } else {
+            resolvedSequenceNumber =
+                nextSequenceNumber - (requiresPartialChunking ? 0 : 1)
+        }
         let segment = CMAFFragmentSegment(
             bytes: assembled,
-            sequenceNumber: nextSequenceNumber,
+            sequenceNumber: resolvedSequenceNumber,
             baseMediaDecodeTime: pendingDecodeTime,
             durationInTimescale: durationToEmit,
             isStreamAccessPoint: samplesToEmit.first?.metadata.flags.isSyncSample ?? false,
-            partialChunks: nil
+            partialChunks: chunks
         )
 
-        // Reset state for the next fragment.
-        nextSequenceNumber += 1
+        // Reset for next fragment.
         nextBaseMediaDecodeTime = pendingDecodeTime + durationToEmit
         pendingSamples.removeAll(keepingCapacity: true)
         pendingDurationInTimescale = 0
+        pendingFragmentChunks.removeAll(keepingCapacity: true)
+        samplesInCurrentChunk.removeAll(keepingCapacity: true)
+        currentChunkDurationInTimescale = 0
+        currentChunkDecodeTime = nextBaseMediaDecodeTime
+
         if let holdoverSample = holdover {
             pendingSamples.append(holdoverSample)
             pendingDecodeTime = nextBaseMediaDecodeTime
-            pendingDurationInTimescale =
+            pendingDurationInTimescale = UInt64(holdoverSample.metadata.durationInTimescale)
+            samplesInCurrentChunk.append(holdoverSample)
+            currentChunkDurationInTimescale =
                 UInt64(holdoverSample.metadata.durationInTimescale)
             state = .openFragment(decodeTime: pendingDecodeTime, samples: 1)
         } else {
@@ -329,6 +423,37 @@ public actor CMAFMediaSegmentWriter {
         }
         return segment
     }
+
+    private func emitCurrentPartialChunk() throws {
+        guard !samplesInCurrentChunk.isEmpty else { return }
+        let chunkIndex = UInt32(pendingFragmentChunks.count)
+        let isIndependent =
+            chunkIndex == 0
+            || samplesInCurrentChunk.first?.metadata.flags.isSyncSample == true
+
+        let assembled = try SegmentByteAssembler.emitFragment(
+            trackID: configuration.trackID,
+            sequenceNumber: nextSequenceNumber,
+            baseMediaDecodeTime: currentChunkDecodeTime,
+            samples: samplesInCurrentChunk,
+            encryption: configuration.encryptionParameters
+        )
+        nextSequenceNumber += 1
+
+        let chunk = CMAFPartialChunk(
+            bytes: assembled.bytes,
+            chunkIndex: chunkIndex,
+            isIndependent: isIndependent,
+            durationInTimescale: currentChunkDurationInTimescale
+        )
+        pendingFragmentChunks.append(chunk)
+
+        currentChunkDecodeTime += currentChunkDurationInTimescale
+        samplesInCurrentChunk.removeAll(keepingCapacity: true)
+        currentChunkDurationInTimescale = 0
+    }
+
+    // MARK: - Helpers
 
     private func makeSegmentIndex(
         fragmentByteSize: Int,
@@ -365,4 +490,5 @@ public actor CMAFMediaSegmentWriter {
         return (UInt64(secondsBetween1900And1970 + secondsPart) << 32)
             | UInt64(fractionPart)
     }
+
 }

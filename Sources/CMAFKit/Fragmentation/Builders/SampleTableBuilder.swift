@@ -38,12 +38,16 @@ internal enum SampleTableBuilder {
                 SampleEntryComposer.makeAudioSampleEntry(configuration: configuration)
             )
         case .subtitle:
-            throw CMAFWriterError.configurationInvalid(
-                reason: "subtitle sample entries are delivered in a follow-on patch"
+            sampleEntry = try requireSampleEntry(
+                SubtitleMetadataSampleEntryComposer.makeSubtitleSampleEntry(
+                    configuration: configuration
+                )
             )
         case .metadata:
-            throw CMAFWriterError.configurationInvalid(
-                reason: "timed-metadata sample entries are delivered in a follow-on patch"
+            sampleEntry = try requireSampleEntry(
+                SubtitleMetadataSampleEntryComposer.makeMetadataSampleEntry(
+                    configuration: configuration
+                )
             )
         }
 
