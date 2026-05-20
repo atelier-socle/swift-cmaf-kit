@@ -166,13 +166,30 @@ public struct ICCProfileSequenceDescType: Sendable, Hashable, Equatable {
                 reason: "ICC embedded mluc nameRecordSize must be 12"
             )
         }
-        var maxPayloadEnd: Int = 8 + 12 * Int(numberOfNames)
+        // `maxPayloadEnd` is the payload-relative position of the
+        // end of the largest string. CMAFKit accepts both
+        // interpretations of `stringOffset` (spec-strict element-
+        // relative and legacy payload-relative); we attempt the
+        // element-relative interpretation first and fall back when
+        // it would underflow.
+        let elementPreambleSize = 8
+        let payloadHeaderSize = 8 + 12 * Int(numberOfNames)
+        var maxPayloadEnd: Int = payloadHeaderSize
         for _ in 0..<numberOfNames {
             _ = try reader.readUInt16()  // languageCode
             _ = try reader.readUInt16()  // countryCode
             let length = try reader.readUInt32()
             let offset = try reader.readUInt32()
-            maxPayloadEnd = max(maxPayloadEnd, Int(offset) + Int(length))
+            // Try element-relative first.
+            let elementBased = Int(offset) - elementPreambleSize + Int(length)
+            let legacyBased = Int(offset) + Int(length)
+            let chosenEnd: Int
+            if elementBased >= payloadHeaderSize {
+                chosenEnd = elementBased
+            } else {
+                chosenEnd = legacyBased
+            }
+            maxPayloadEnd = max(maxPayloadEnd, chosenEnd)
         }
         return 8 + maxPayloadEnd
     }

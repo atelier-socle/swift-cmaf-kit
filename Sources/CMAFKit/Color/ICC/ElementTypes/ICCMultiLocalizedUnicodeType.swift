@@ -3,14 +3,34 @@
 
 // MARK: - ICCMultiLocalizedUnicodeType
 //
-// Reference: ICC.1:2022 §10.13 (multiLocalizedUnicodeType, signature 'mluc').
+// Reference: ICC.1:2010 §10.13 + ICC.1:2022 §10.13
+// (multiLocalizedUnicodeType, signature 'mluc').
 //
-// On-wire layout: UInt32 numberOfNames + UInt32 nameRecordSize
-//   + numberOfNames × (UInt16 languageCode + UInt16 countryCode
-//                      + UInt32 stringLength + UInt32 stringOffset)
-//   + string data (UTF-16BE).
+// On-wire layout (the tag element starts at the 'mluc' signature
+// byte; offsets noted in the table are element-relative):
 //
-// String offsets are relative to the start of the tag's 8-byte preamble.
+//   tagOffset  field                              size
+//        +0    UInt32  signature ('mluc')         4
+//        +4    UInt32  reserved (must be 0)       4
+//        +8    UInt32  numberOfNames        N     4
+//       +12    UInt32  nameRecordSize             4
+//       +16    Records:                         12*N
+//                 UInt16  languageCode
+//                 UInt16  countryCode
+//                 UInt32  stringLength            in bytes (UTF-16BE)
+//                 UInt32  stringOffset            element-relative
+//   +16+12*N   String pool (UTF-16BE)             variable
+//
+// **Encoder**: CMAFKit emits `stringOffset` as an **element-
+// relative** value, the spec-strict interpretation. Earlier CMAFKit
+// builds used payload-relative offsets; that legacy form is still
+// accepted on the decode path for backward compatibility, but the
+// encoder no longer produces it.
+//
+// **Decoder**: attempts the element-relative interpretation first.
+// If a record's offset/length falls outside the element's
+// boundaries, the decoder falls back to the legacy payload-
+// relative interpretation. Both round-trip cleanly within CMAFKit.
 
 import Foundation
 
@@ -36,6 +56,12 @@ public struct ICCMultiLocalizedUnicodeType: Sendable, Hashable, Equatable, Codab
     public init(strings: [LocalizedString]) {
         self.strings = strings
     }
+
+    /// Number of bytes contributed by the element preamble that
+    /// precedes the payload (4-byte signature + 4-byte reserved).
+    internal static let elementPreambleSize = 8
+    /// Number of bytes per record entry inside the records table.
+    internal static let recordEntrySize = 12
 
     public static func parsePayload(
         reader: inout BinaryReader,
@@ -63,11 +89,22 @@ public struct ICCMultiLocalizedUnicodeType: Sendable, Hashable, Equatable, Codab
             let country = try reader.readUInt16()
             let length = try reader.readUInt32()
             let offset = try reader.readUInt32()
-            records.append(Record(language: lang, country: country, length: length, offset: offset))
+            records.append(
+                Record(
+                    language: lang,
+                    country: country,
+                    length: length,
+                    offset: offset
+                ))
         }
 
-        let preambleByteCount = 8 + 12 * Int(numberOfNames)
-        let remainingBytes = byteCount - preambleByteCount
+        // `parsePayload` is invoked after the caller consumed the
+        // 8-byte element preamble. The on-wire payload reaches from
+        // the `numberOfNames` field to the end of the element.
+        let payloadHeaderSize = 8  // numberOfNames + nameRecordSize
+        let recordTableSize = 12 * Int(numberOfNames)
+        let preStringBytes = payloadHeaderSize + recordTableSize
+        let remainingBytes = byteCount - preStringBytes
         guard remainingBytes >= 0 else {
             throw ISOBoxError.malformedFullBox(
                 type: "colr",
@@ -75,22 +112,34 @@ public struct ICCMultiLocalizedUnicodeType: Sendable, Hashable, Equatable, Codab
             )
         }
         let stringPoolData = try reader.readData(count: remainingBytes)
-        // String offsets are relative to the start of the tag (i.e., the
-        // 8-byte preamble + record table is `8 + 12 × N` bytes long).
-        let poolBaseOffset = 8 + 12 * Int(numberOfNames)
+
+        // Element-relative pool base: the string pool starts at
+        // `8 (preamble) + 8 (header) + 12*N` from the tag's first
+        // byte.
+        let elementRelativePoolBase = elementPreambleSize + preStringBytes
+        // Legacy payload-relative pool base: the string pool starts
+        // at `8 + 12*N` from the start of the payload (which is
+        // where prior CMAFKit builds anchored their offsets).
+        let legacyRelativePoolBase = preStringBytes
 
         var strings: [LocalizedString] = []
         strings.reserveCapacity(records.count)
         for rec in records {
-            let start = Int(rec.offset) - poolBaseOffset
             let length = Int(rec.length)
-            guard start >= 0, start + length <= stringPoolData.count else {
+            let elementStart = Int(rec.offset) - elementRelativePoolBase
+            let legacyStart = Int(rec.offset) - legacyRelativePoolBase
+            let chosenStart: Int
+            if elementStart >= 0, elementStart + length <= stringPoolData.count {
+                chosenStart = elementStart
+            } else if legacyStart >= 0, legacyStart + length <= stringPoolData.count {
+                chosenStart = legacyStart
+            } else {
                 throw ISOBoxError.malformedFullBox(
                     type: "colr",
                     reason: "ICC mluc string offset/length out of bounds"
                 )
             }
-            let absStart = stringPoolData.startIndex.advanced(by: start)
+            let absStart = stringPoolData.startIndex.advanced(by: chosenStart)
             let absEnd = absStart.advanced(by: length)
             let slice = stringPoolData.subdata(in: absStart..<absEnd)
             let str = String(data: slice, encoding: .utf16BigEndian) ?? ""
@@ -99,7 +148,8 @@ public struct ICCMultiLocalizedUnicodeType: Sendable, Hashable, Equatable, Codab
                     languageCode: rec.language,
                     countryCode: rec.country,
                     text: str
-                ))
+                )
+            )
         }
         return ICCMultiLocalizedUnicodeType(strings: strings)
     }
@@ -108,8 +158,10 @@ public struct ICCMultiLocalizedUnicodeType: Sendable, Hashable, Equatable, Codab
         writer.writeUInt32(UInt32(strings.count))
         writer.writeUInt32(12)  // nameRecordSize
 
-        let preambleSize = 8 + 12 * strings.count
-        var cumulativeOffset = UInt32(preambleSize)
+        // Spec-strict element-relative offset: the string pool
+        // starts at `8 (preamble) + 8 (header) + 12*N`.
+        let elementBasedPoolOffset = Self.elementPreambleSize + 8 + 12 * strings.count
+        var cumulativeOffset = UInt32(elementBasedPoolOffset)
         var stringPool = Data()
         for s in strings {
             let utf16Bytes = s.text.data(using: .utf16BigEndian) ?? Data()
