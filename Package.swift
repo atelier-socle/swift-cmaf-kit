@@ -18,6 +18,10 @@ let package = Package(
             name: "CMAFKit",
             targets: ["CMAFKit"]
         ),
+        .library(
+            name: "CMAFKitDRM",
+            targets: ["CMAFKitDRM"]
+        ),
         .executable(
             name: "cmafkit-cli",
             targets: ["CMAFKitCLI"]
@@ -57,6 +61,14 @@ let package = Package(
                 .enableUpcomingFeature("ExistentialAny"),
             ]
         ),
+        .target(
+            name: "CMAFKitDRM",
+            dependencies: ["CMAFKit"],
+            path: "Sources/CMAFKitDRM",
+            swiftSettings: [
+                .enableUpcomingFeature("ExistentialAny"),
+            ]
+        ),
         .executableTarget(
             name: "CMAFKitCLI",
             dependencies: [
@@ -72,6 +84,11 @@ let package = Package(
             resources: [
                 // Session 12 will add: .copy("Fixtures")
             ]
+        ),
+        .testTarget(
+            name: "CMAFKitDRMTests",
+            dependencies: ["CMAFKitDRM", "CMAFKit"],
+            path: "Tests/CMAFKitDRMTests"
         ),
     ],
     swiftLanguageModes: [.v6]
