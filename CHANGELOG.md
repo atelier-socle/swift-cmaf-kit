@@ -2,6 +2,34 @@
 
 All notable changes to this project are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+#### CMAFKit
+
+- (Session 1) `HEVCParameterSets` aggregate type for HEVC VPS/SPS/PPS extraction from a NAL stream, per ITU-T H.265 §7.3.2 + ISO/IEC 14496-15 §8.3.3.1.
+- (Session 2-3) MV-HEVC (Multi-View HEVC) complete container support — `MVHEVCSampleEntry` (`hvc2`), `MultiLayerHEVCConfiguration`, Apple HEVC Stereo Video Profile boxes (`vexu`, `stri`, `hero`), `MVHEVCPackager` actor, per ISO/IEC 14496-15 §8.4 + §I, ITU-T H.265 §F + §I, and Apple HEVC Stereo Video Profile.
+- (Session 4) `RFC6381CodecStringBuilder` for canonical codec string generation and parsing, per IETF RFC 6381, ISO/IEC 14496-15 §A.5, Apple HLS Authoring §2.2, and DASH-IF Implementation Guidelines §4.
+- (Session 5) `BCP47LanguageTag` typed struct + ISO 639-2/T ↔ BCP 47 bridge, per RFC 5646, RFC 4647, ISO 639-1/2/3, ISO 15924, ISO 3166-1, UN M.49, and the IANA Language Subtag Registry.
+- (Session 6) `EC3JOCExtension` typed enum for first-class Dolby Atmos detection in E-AC-3 streams, per ETSI TS 102 366 Annex H.
+- (Session 6) `ALACSampleEntry` + `ALACSpecificBox` for Apple Lossless audio (lossless distribution / archival), per Apple ALAC Reference Implementation (public 2011) + ISO/IEC 14496-12 §12.2.
+- (Session 6) PCM sample entries — `IntegerPCMSampleEntry` (`ipcm`), `FloatingPointPCMSampleEntry` (`fpcm`), `LegacyPCMSampleEntry` (`lpcm`) + `PCMConfigurationBox` (`pcmC`), per ISO/IEC 23003-5 and ISO/IEC 14496-12 §12.2.3.
+- (Session 7) `ISOConformanceValidator` — generic ISO BMFF structural validator (8 rules I1-I8), independent of CMAF profile, per ISO/IEC 14496-12 §4 + §8.
+- (Session 7) `CENCConformanceValidator` — ISO/IEC 23001-7 Common Encryption validator (8 rules C1-C8), extracted from `CMAFConformanceValidator` for orthogonal validator composition.
+
+### Removed
+
+- (Session 1) Three placeholder modules `Sources/CMAFKit/CodecBitstream/`, `Sources/CMAFKit/CodecSampleEntries/`, `Sources/CMAFKit/CMAFProfiles/` (inert `_*Placeholder.swift` files, zero public surface — content was relocated during 0.1.0 implementation to flatter locations).
+
+### Notes
+
+- 19 new standards covered (cumulative total: 45+, vs 26 in 0.1.0).
+- Test count: +~250 tests (cumulative ~3 150 from 2 896 in 0.1.0).
+- Zero breaking change on the v0.1.0 public surface.
+- Zero forbidden patterns.
+- All 7 Apple targets build clean (macOS native, Mac Catalyst, iOS, iPadOS, tvOS, watchOS, visionOS); Linux builds clean with `canImport(AVFoundation)`-guarded fixtures only.
+
 ## [0.1.0] — 2026-05-23
 
 Initial public release of the pure-Swift CMAF / ISO BMFF / Common Encryption foundation, the opt-in CMAFKitDRM extension covering nine publicly-registered DRM systems, and the `cmafkit-cli` companion executable.
