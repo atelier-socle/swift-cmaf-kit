@@ -1,4 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Atelier Socle SAS
+
+# ci.yml — Continuous Integration for swift-cmaf-kit.
+#
+# Lint (swift-format + swiftlint + forbidden patterns), then build + test
+# on macOS (macos-26 with Xcode 26.4) and Linux (swift:6.2-jammy).
+
 name: CI
+
 on:
   push:
     branches: [main]
@@ -13,7 +22,7 @@ jobs:
   lint:
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install swift-format and swiftlint
         run: brew install swift-format swiftlint
       - name: swift-format lint
@@ -36,7 +45,11 @@ jobs:
     runs-on: macos-26
     needs: lint
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_26.4.app
+      - name: Swift version
+        run: swift --version
       - name: swift build
         run: swift build
       - name: swift build -c release
@@ -49,7 +62,7 @@ jobs:
     needs: lint
     container: swift:6.2-jammy
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: swift build
         run: swift build
       - name: swift build -c release

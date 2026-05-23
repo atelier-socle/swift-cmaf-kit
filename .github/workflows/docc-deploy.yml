@@ -36,6 +36,9 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.4.app
 
+      - name: Prepare output directory
+        run: mkdir -p docs
+
       - name: Build CMAFKit documentation
         run: |
           swift package --allow-writing-to-directory docs \
@@ -80,7 +83,7 @@ jobs:
           echo '<meta http-equiv="refresh" content="0; url=documentation/cmafkit/" />' > docs/merged/index.html
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@v4
         with:
           path: docs/merged
 
