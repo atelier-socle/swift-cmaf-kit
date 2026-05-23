@@ -1,23 +1,48 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Atelier Socle SAS
 
+// MARK: - cmafkit-cli
+//
+// Reference: ArgumentParser AsyncParsableCommand root for the
+// `cmafkit-cli` executable. Dispatches to four subcommands:
+//   probe         — per-track metadata
+//   validate      — conformance validator (cmaf / dash / llhls)
+//   dump-tree     — ISOBMFF box hierarchy
+//   decrypt-init  — typed DRM pssh init data (no decryption)
+//
+// The CLI is read-only by default: subcommands never modify their
+// input file.
+
 import ArgumentParser
 import CMAFKit
+import Foundation
 
-/// `cmafkit-cli` — command-line interface for CMAFKit.
-///
-/// Subcommands ship in the 0.1.0 release. The current binary prints its
-/// version and exits; this stub will be replaced by the full subcommand
-/// suite before tag.
+/// Root command for `cmafkit-cli`.
 @main
-struct CMAFKitCLI: ParsableCommand {
-    static let configuration = CommandConfiguration(
+public struct CMAFKitCLI: AsyncParsableCommand {
+    public static let configuration = CommandConfiguration(
         commandName: "cmafkit-cli",
         abstract: "Inspect, validate, and operate on ISOBMFF / CMAF media.",
-        version: CMAFKitVersion
+        discussion: """
+            cmafkit-cli ships four subcommands:
+              probe         report per-track metadata for an init segment
+              validate      run a CMAF / DASH / LL-HLS conformance validator
+              dump-tree     print the ISOBMFF box hierarchy
+              decrypt-init  decode typed DRM init data from pssh boxes
+
+            Every subcommand is read-only and never modifies the input
+            file. The CLI never handles decryption key material; the
+            `decrypt-init` subcommand parses and prints initialisation
+            data only.
+            """,
+        version: CMAFKitVersion,
+        subcommands: [
+            ProbeCommand.self,
+            ValidateCommand.self,
+            DumpTreeCommand.self,
+            DecryptInitCommand.self
+        ]
     )
 
-    func run() throws {
-        print("cmafkit-cli \(CMAFKitVersion) — pre-release. Subcommands ship at 0.1.0.")
-    }
+    public init() {}
 }

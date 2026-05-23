@@ -3,8 +3,8 @@
 
 # docc-deploy.yml — Deploy DocC documentation to GitHub Pages.
 #
-# Builds and merges the CMAFKit + CMAFKitCLI catalogs into a single archive
-# (per addendum F.1), then publishes the static-hosting tree to GitHub Pages
+# Builds and merges the CMAFKit + CMAFKitDRM + CMAFKitCLI catalogs into a
+# single archive, then publishes the static-hosting tree to GitHub Pages
 # at https://atelier-socle.github.io/swift-cmaf-kit/
 
 name: DocC
@@ -46,6 +46,16 @@ jobs:
             --hosting-base-path swift-cmaf-kit \
             --disable-indexing
 
+      - name: Build CMAFKitDRM documentation
+        run: |
+          swift package --allow-writing-to-directory docs \
+            generate-documentation \
+            --target CMAFKitDRM \
+            --output-path docs/CMAFKitDRM.doccarchive \
+            --transform-for-static-hosting \
+            --hosting-base-path swift-cmaf-kit \
+            --disable-indexing
+
       - name: Build CMAFKitCLI documentation
         run: |
           swift package --allow-writing-to-directory docs \
@@ -61,6 +71,7 @@ jobs:
           rm -rf docs/merged
           xcrun docc merge \
             docs/CMAFKit.doccarchive \
+            docs/CMAFKitDRM.doccarchive \
             docs/CMAFKitCLI.doccarchive \
             --output-path docs/merged
 

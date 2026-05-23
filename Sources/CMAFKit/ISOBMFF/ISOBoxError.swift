@@ -42,9 +42,9 @@ public enum ISOBoxError: Error, Equatable, Sendable {
     /// header. The `reason` field describes the structural inconsistency
     /// in the body bytes.
     ///
-    /// Distinct from ``malformedChild``, which signals a failure inside a
-    /// container while parsing its children. ``malformedFullBox`` signals
-    /// that a full-box's own body bytes are inconsistent with the spec's
-    /// invariants for that box type.
+    /// Distinct from a malformed-child failure inside a container while
+    /// parsing its children; `malformedFullBox` signals that a full-box's
+    /// own body bytes are inconsistent with the spec's invariants for
+    /// that box type.
     case malformedFullBox(type: FourCC, reason: String)
 }

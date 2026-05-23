@@ -31,13 +31,13 @@ public struct CMAFTrackConfiguration: Sendable, Equatable {
     /// ISO 639-2/T 3-byte language code (e.g., `"eng"`, `"fra"`,
     /// `"und"`).
     public let language: String
-    /// Video-specific fields. Present iff ``kind == .video``.
+    /// Video-specific fields. Present iff `kind == .video`.
     public let videoFields: VideoFields?
-    /// Audio-specific fields. Present iff ``kind == .audio``.
+    /// Audio-specific fields. Present iff `kind == .audio`.
     public let audioFields: AudioFields?
-    /// Subtitle-specific fields. Present iff ``kind == .subtitle``.
+    /// Subtitle-specific fields. Present iff `kind == .subtitle`.
     public let subtitleFields: SubtitleFields?
-    /// Metadata-track-specific fields. Present iff ``kind == .metadata``.
+    /// Metadata-track-specific fields. Present iff `kind == .metadata`.
     public let metadataFields: MetadataFields?
     /// Optional edit list emitted as `edts/elst`. Required for audio
     /// codecs with non-zero priming (`Opus`, HE-AAC).

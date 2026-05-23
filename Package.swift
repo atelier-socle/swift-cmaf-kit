@@ -73,6 +73,7 @@ let package = Package(
             name: "CMAFKitCLI",
             dependencies: [
                 "CMAFKit",
+                "CMAFKitDRM",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             path: "Sources/CMAFKitCLI"
@@ -89,6 +90,11 @@ let package = Package(
             name: "CMAFKitDRMTests",
             dependencies: ["CMAFKitDRM", "CMAFKit"],
             path: "Tests/CMAFKitDRMTests"
+        ),
+        .testTarget(
+            name: "CMAFKitCLITests",
+            dependencies: ["CMAFKitCLI", "CMAFKit", "CMAFKitDRM"],
+            path: "Tests/CMAFKitCLITests"
         ),
     ],
     swiftLanguageModes: [.v6]

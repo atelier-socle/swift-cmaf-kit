@@ -7,7 +7,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-for target in CMAFKit CMAFKitCLI; do
+for target in CMAFKit CMAFKitDRM CMAFKitCLI; do
     echo "→ Verifying DocC for $target"
     output=$(swift package generate-documentation --target "$target" 2>&1)
     if echo "$output" | grep -qE "warning|error"; then

@@ -17,7 +17,7 @@ import Foundation
 public struct AVCPictureParameterSet: Sendable, Hashable, Equatable {
 
     /// Slice-group map (§7.4.2.2). Most streams set
-    /// `num_slice_groups_minus1 == 0`, in which case ``map`` is `nil`.
+    /// `num_slice_groups_minus1 == 0`, in which case `map` is `nil`.
     public enum SliceGroupMap: Sendable, Hashable, Equatable {
         case interleaved(runLengthMinus1: [UInt32])
         case dispersed

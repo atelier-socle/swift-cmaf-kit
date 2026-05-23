@@ -55,7 +55,7 @@ extension SampleInfoSizeTable: LazyTableData {
 /// information has that fixed size in bytes and ``perSampleSizes`` is
 /// empty. When ``constantSize`` is `nil`, ``perSampleSizes`` carries one
 /// byte per sample (size of that sample's auxiliary information) and its
-/// ``count`` equals ``sampleCount``.
+/// `count` equals ``sampleCount``.
 public struct SampleAuxiliaryInformationSizesBox: ISOFullBox, Sendable, Equatable {
     public static let boxType: FourCC = "saiz"
 

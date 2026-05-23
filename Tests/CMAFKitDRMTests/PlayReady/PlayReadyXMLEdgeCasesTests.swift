@@ -104,7 +104,7 @@ struct PlayReadyXMLEdgeCasesTests {
             0x01, 0x00,
             0x01, 0x00,
             0x02, 0x00,
-            0xFF, 0xFE,
+            0xFF, 0xFE
         ])
         #expect(throws: DRMSystemError.self) {
             _ = try PlayReadyInitData.parse(bytes)

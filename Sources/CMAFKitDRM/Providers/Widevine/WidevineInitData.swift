@@ -53,7 +53,7 @@ public struct WidevineInitData: Sendable, Hashable, Equatable, Codable {
     public let policy: String?
     public let cryptoPeriodIndex: UInt32?
     public let groupedLicense: Data?
-    /// Maps to ``CMAFKit/CommonEncryptionScheme`` whose raw value is
+    /// Maps to CMAFKit's `CommonEncryptionScheme` whose raw value is
     /// the big-endian FourCC bit pattern. Unknown FourCCs are
     /// preserved as ``protectionSchemeRaw``.
     public let protectionScheme: CommonEncryptionScheme?

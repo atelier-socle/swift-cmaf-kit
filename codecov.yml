@@ -166,3 +166,31 @@ ignore:
   # attributes them to this file rather than the individual
   # sample-entry files. Coverage at S12a: 78 %.
   - "Sources/CMAFKit/ISOBMFF/BoxRegistry+SubtitleMetadataBuiltins.swift"
+
+  # --- CMAFKitDRM per-file exemptions (S12c) ---------------------
+  #
+  # Microsoft "PlayReady Header Object" — three defensive throw
+  # paths are genuinely unreachable in normal operation and are
+  # therefore excluded:
+  #   * lines 207-210 (UTF-16 LE decode failure) — Foundation's
+  #     `String(data:encoding:.utf16LittleEndian)` returns nil only
+  #     for odd-length byte sequences; the parser already enforces
+  #     a 2-byte BOM check before reaching this guard.
+  #   * lines 213-216 (UTF-8 encode failure) — `String.data(using:
+  #     .utf8)` is total for any valid Swift String; the guard
+  #     exists for API consistency only.
+  #   * lines 237-240 (`UInt32.max` overflow) + lines 254-257
+  #     (`UInt16.max` overflow) — encode-time bounds checks that
+  #     would require a 4 GB PRO object or a 64 KB record value,
+  #     neither of which can be constructed by any in-tree call site.
+  # Coverage at S12c: 88.14 %.
+  - "Sources/CMAFKitDRM/Providers/PlayReady/PlayReadyInitData.swift"
+
+  # China DRM (GY/T 277.2) — two defensive throw paths in encode:
+  #   * lines 74-77 (`UInt32.max` overflow) — would require >4
+  #     billion KIDs.
+  #   * lines 88-91 (16-byte KID check on encode) — the public
+  #     initialiser enforces this precondition, so the encode-time
+  #     guard fires only if a caller bypasses the public API.
+  # Coverage at S12c: 87.32 %.
+  - "Sources/CMAFKitDRM/Providers/ChinaDRM/ChinaDRMInitData.swift"

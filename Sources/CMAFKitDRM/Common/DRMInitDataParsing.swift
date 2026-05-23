@@ -19,7 +19,7 @@ import Foundation
 /// Conformers expose the typed `TypedInitData` shape via
 /// ``parse(_:)`` and reverse the operation via ``encode(_:)``.
 /// The CMAFKitDRM dispatch path
-/// (``ProtectionSystemSpecificHeaderBox/typedInitData()``) selects
+/// (`ProtectionSystemSpecificHeaderBox.typedInitData()`) selects
 /// the conforming parser by FourCC system identifier and forwards
 /// the raw pssh bytes.
 public protocol DRMInitDataParsing: Sendable {
