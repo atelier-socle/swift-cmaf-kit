@@ -48,22 +48,33 @@ public enum TypedDRMInitData: Sendable, Equatable, Hashable {
         }
     }
 
-    /// The raw pssh.data bytes underlying this payload. For S12a
-    /// every typed arm wraps the raw bytes; S12b replaces those
-    /// wrappers with structured shapes (and this accessor remains
-    /// available for round-trip).
-    public var rawBytes: Data {
+    /// Re-encode this typed payload back to the opaque pssh.data
+    /// bytes. The result round-trips byte-perfectly with the
+    /// canonical encoder for every fully-typed provider; for the
+    /// opaque-preserved providers (Nagra, Verimatrix, Adobe
+    /// Primetime) the original bytes are returned verbatim.
+    public func encoded() throws -> Data {
         switch self {
-        case .widevine(let data): return data.rawBytes
-        case .playReady(let data): return data.rawBytes
-        case .fairPlay(let data): return data.rawBytes
-        case .clearKey(let data): return data.rawBytes
-        case .marlin(let data): return data.rawBytes
-        case .nagra(let data): return data.rawBytes
-        case .verimatrix(let data): return data.rawBytes
-        case .adobePrimetime(let data): return data.rawBytes
-        case .chinaDRM(let data): return data.rawBytes
-        case .unknown(_, let bytes): return bytes
+        case .widevine(let value):
+            return try WidevineInitData.encode(value)
+        case .playReady(let value):
+            return try PlayReadyInitData.encode(value)
+        case .fairPlay(let value):
+            return try FairPlayInitData.encode(value)
+        case .clearKey(let value):
+            return try ClearKeyInitData.encode(value)
+        case .marlin(let value):
+            return try MarlinInitData.encode(value)
+        case .nagra(let value):
+            return try NagraInitData.encode(value)
+        case .verimatrix(let value):
+            return try VerimatrixInitData.encode(value)
+        case .adobePrimetime(let value):
+            return try AdobePrimetimeInitData.encode(value)
+        case .chinaDRM(let value):
+            return try ChinaDRMInitData.encode(value)
+        case .unknown(_, let bytes):
+            return bytes
         }
     }
 }
