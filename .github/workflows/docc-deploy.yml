@@ -83,7 +83,7 @@ jobs:
           echo '<meta http-equiv="refresh" content="0; url=documentation/cmafkit/" />' > docs/merged/index.html
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: docs/merged
 
