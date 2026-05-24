@@ -15,7 +15,36 @@ A pure-Swift implementation of the Common Media Application Format (ISO/IEC 2300
 
 ## Status
 
-**0.1.0** — production-ready for the documented scope. APIs may evolve before 1.0 based on community feedback. The library ships two products (`CMAFKit` + opt-in `CMAFKitDRM`) and a companion executable (`cmafkit-cli`).
+**0.1.1** — patch release closing the no-compromise completion of the 0.1.0 surface. Required for HLSKit 0.7.0 migration and future DASHKit 0.1.0 enablement. Purely additive — zero breaking change on the v0.1.0 public surface. APIs may evolve before 1.0 based on community feedback. The library ships two products (`CMAFKit` + opt-in `CMAFKitDRM`) and a companion executable (`cmafkit-cli`).
+
+## What's new in 0.1.1
+
+Eight sessions of "no-compromise completion" work, every primitive
+shipping with full spec citations and round-trip tests.
+
+| Module | New primitives | Use case |
+|---|---|---|
+| Multi-view HEVC | `HEVCParameterSets`, `HEVCVPSExtension`, `HEVCMultiLayerSPS`, `MultiLayerHEVCConfiguration`, `MVHEVCSampleEntry`, `MVHEVCPackager`, `ViewExtendedUsageBox`, `StereoInformationBox`, `HeroEyeInformationBox` | Apple Vision Pro spatial video |
+| Codec strings | `RFC6381CodecDescriptor` (23 cases), `RFC6381CodecStringBuilder` | HLS `EXT-X-STREAM-INF` + DASH `@codecs` |
+| Language tags | `BCP47LanguageTag` + ISO 639-2/T bridge + RFC 4647 matching | HLS `LANGUAGE` + DASH `@lang` |
+| Accessibility | `MediaSelectionRole`, `AccessibilityFeature`, `AccessibilityCharacteristic`, `AudioPurpose`, `AccessibilityMetadata` | EU Accessibility Act 2025 ready |
+| Audio codecs | `EC3JOCExtension` + `EC3SpecificBox.carriesDolbyAtmos`, `ALACSampleEntry`/`ALACSpecificBox`, `IntegerPCMSampleEntry`/`FloatingPointPCMSampleEntry`/`LegacyPCMSampleEntry`, `PCMConfigurationBox` | Atmos / ALAC / CMAF uncompressed PCM |
+| Validators | `ISOConformanceValidator` (I1-I8), `CENCConformanceValidator` (C1-C8) | Standalone ISO BMFF + Common Encryption validation |
+
+### Metrics
+
+- **+656 tests** (2 896 → 3 552 across 8 sessions before the showcase round)
+- **+28 standards** covered
+- **Zero public symbol removed** since v0.1.0
+- **Zero forbidden patterns** introduced
+- **Coverage** ≥ 92 % global maintained across all sessions
+
+### Documentation
+
+Six new DocC articles: `MVHEVCGuide`, `CodecStringReference`,
+`LanguageTagsReference`, `AccessibilityReference`,
+`AudioCodecsReference`, `ValidatorsHierarchy`. See
+[CHANGELOG.md](CHANGELOG.md) for the full additive surface list.
 
 ## Requirements
 

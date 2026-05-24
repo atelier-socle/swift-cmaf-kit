@@ -43,7 +43,7 @@ public enum EC3JOCExtension: Sendable, Equatable, Hashable {
 
     /// Object-based JOC — the JOC extension carries only object-encoded
     /// data with no channel-based bed. Rare in practice; most Atmos
-    /// deliveries are ``bedAndObjects``.
+    /// deliveries are ``bedAndObjects(complexityIndex:)``.
     ///
     /// `complexityIndex` per Annex H.3 indicates the maximum number of
     /// objects (typically 0-15 for streaming-grade configurations).
@@ -77,7 +77,7 @@ public enum EC3JOCExtension: Sendable, Equatable, Hashable {
     }
 
     /// The Annex H.3 `joc_complexity_index`, or `nil` for ``none`` /
-    /// ``programmaticExtension`` (where complexity is encoded inside
+    /// ``programmaticExtension(rawBytes:)`` (where complexity is encoded inside
     /// the raw bytes).
     public var complexityIndex: UInt8? {
         switch self {

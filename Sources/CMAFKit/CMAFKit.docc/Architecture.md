@@ -4,8 +4,9 @@ The eleven-module layered design of CMAFKit.
 
 ## Overview
 
-CMAFKit follows a strict layered architecture. The dependency rules are documented inline in each module.
- The layers are:
+CMAFKit follows a strict layered architecture. The dependency rules
+are documented inline in each module. Lower layers cannot reference
+upper layers.
 
 - Layer 0 — BinaryIO
 - Layer 1 — Media
@@ -14,5 +15,30 @@ CMAFKit follows a strict layered architecture. The dependency rules are document
 - Layer 4 — Encryption, Fragmentation
 - Layer 5 — CMAFProfiles, Reader, Validator
 
-> Important: this article is a stub. It is expanded with diagrams and full
-> rationale ahead of the 0.1.0 tag.
+## 0.1.1 additions
+
+The 0.1.1 patch adds the following submodules (all purely additive,
+respecting the layered constraints):
+
+- `Sources/CMAFKit/Media/Languages/` — BCP 47 typed language tags
+  (Session 5). Sits at Layer 1 (Media). See
+  <doc:LanguageTagsReference>.
+- `Sources/CMAFKit/Media/Accessibility/` — cross-format
+  accessibility primitives (Session 5.5). Sits at Layer 1 (Media).
+  See <doc:AccessibilityReference>.
+- Typed members under `Sources/CMAFKit/ISOBMFF/SampleEntries/Audio/`
+  for ALAC / PCM (Session 6) and `EC3JOCExtension` typed enum +
+  `EC3SpecificBox+JOC` extension. See <doc:AudioCodecsReference>.
+- Members under `Sources/CMAFKit/Bitstreams/HEVC/` +
+  `Sources/CMAFKit/ISOBMFF/SampleEntries/Video/` for multi-view
+  HEVC (Sessions 1-3). See <doc:MVHEVCGuide>.
+- `Sources/CMAFKit/Fragmentation/Common/RFC6381CodecStringBuilder*.swift`
+  for RFC 6381 codec strings (Session 4). See
+  <doc:CodecStringReference>.
+- `Sources/CMAFKit/Validator/ISOConformanceValidator*.swift` +
+  `CENCConformanceValidator*.swift` for the box-array-layer
+  validators (Session 7). See <doc:ValidatorsHierarchy>.
+
+Every 0.1.1 addition preserves the v0.1.0 public surface
+byte-identically — see the project CHANGELOG for the complete
+audit trail.

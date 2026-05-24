@@ -29,8 +29,8 @@ extension EC3SpecificBox {
     ///   reserves five bits for the complexity index; upper bits are
     ///   reserved).
     ///
-    /// The ``EC3JOCExtension/objectBased`` and
-    /// ``EC3JOCExtension/channelBased`` variants are not signalled by
+    /// The ``EC3JOCExtension/objectBased(complexityIndex:)`` and
+    /// ``EC3JOCExtension/channelBased(complexityIndex:)`` variants are not signalled by
     /// the dec3 trailer alone — they require parsing the actual E-AC-3
     /// dependent substreams. Callers that have parsed the substreams
     /// may construct those cases directly.
