@@ -138,6 +138,9 @@ struct SampleEntryComposerBoostTests {
             wrongConfig = .avc(SampleEntryComposerCodecSweepTests.makeAVCConfig())
         case .mp4v:
             wrongConfig = .avc(SampleEntryComposerCodecSweepTests.makeAVCConfig())
+        case .hvc2:
+            // wrong-arm: .hvc2 expects .mvHEVC; supply .avc to force mismatch
+            wrongConfig = .avc(SampleEntryComposerCodecSweepTests.makeAVCConfig())
         }
         return CMAFTrackConfiguration(
             trackID: 1,

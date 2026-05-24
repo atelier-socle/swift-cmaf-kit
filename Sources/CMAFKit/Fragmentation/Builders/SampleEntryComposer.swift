@@ -165,6 +165,21 @@ internal enum SampleEntryComposer {
                 elementaryStreamDescriptor: esds,
                 extensions: extensions
             )
+        case .hvc2:
+            guard case let .mvHEVC(config, vexu, stri, hero) = video.codecConfiguration else {
+                throw CMAFWriterError.configurationInvalid(
+                    reason: "hvc2 sample entry requires .mvHEVC codec configuration"
+                )
+            }
+            return MVHEVCSampleEntry(
+                visualFields: visualFields,
+                hvcCBase: config.baseLayer,
+                hvcCExtension: config.extensionLayer,
+                vexu: vexu,
+                stri: stri,
+                hero: hero,
+                multiLayerConfiguration: config
+            )
         }
     }
 
