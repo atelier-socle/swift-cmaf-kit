@@ -6,8 +6,8 @@
 // Reference: ISO/IEC 14496-12 §8.3 (TrackBox), §8.4 (MediaBox),
 // §8.5.2 (SampleDescriptionBox).
 //
-// Inverts the composition path of the writer (Session 10): given a
-// parsed `trak` box plus the moov-level `pssh` set, reconstruct a
+// Inverts the composition path of the writer: given a parsed `trak`
+// box plus the moov-level `pssh` set, reconstruct a
 // ``CMAFTrackConfiguration`` value with the right codec arm, the
 // matching codec configuration record, the optional encryption
 // parameters, and the surfaced extension boxes (color, mastering

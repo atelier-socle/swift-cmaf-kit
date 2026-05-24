@@ -5,34 +5,33 @@ All notable changes to this project are documented in this file. The format foll
 ## [0.1.1] — 2026-05-25
 
 Patch release closing the no-compromise completion of the 0.1.0
-surface. Required for HLSKit 0.7.0 migration and future DASHKit 0.1.0
-enablement. Eight implementation sessions plus a final
-documentation + audit session. Zero breaking change on the v0.1.0
-public surface. Zero public symbol removed since v0.1.0. Zero
-forbidden patterns introduced.
+surface. Required for HLSKit 0.7.0 migration and future DASHKit
+0.1.0 enablement. Zero breaking change on the v0.1.0 public
+surface. Zero public symbol removed since v0.1.0. Zero forbidden
+patterns introduced.
 
 ### Added
 
-#### Multi-view HEVC and Apple Vision Pro spatial video (Sessions 1-3)
+#### Multi-view HEVC and Apple Vision Pro spatial video
 
-- `HEVCParameterSets` aggregate (Session 1) — VPS/SPS/PPS triplet
-  extracted from a NAL stream, per ITU-T H.265 §7.3.2 + ISO/IEC
-  14496-15 §8.3.3.1.
+- `HEVCParameterSets` aggregate — VPS/SPS/PPS triplet extracted
+  from a NAL stream, per ITU-T H.265 §7.3.2 + ISO/IEC 14496-15
+  §8.3.3.1.
 - `HEVCVPSExtension`, `HEVCMultiLayerSPS`,
-  `HEVCMultiLayerScalingListData` (Session 2) — multi-layer HEVC
-  bitstream foundation per ITU-T H.265 §F + §I.
+  `HEVCMultiLayerScalingListData` — multi-layer HEVC bitstream
+  foundation per ITU-T H.265 §F + §I.
 - `ViewExtendedUsageBox` (`vexu`), `StereoInformationBox` (`stri`),
-  `HeroEyeInformationBox` (`hero`) (Session 2) — Apple HLS Spatial
-  Video extension boxes.
+  `HeroEyeInformationBox` (`hero`) — Apple HLS Spatial Video
+  extension boxes.
 - `MultiLayerHEVCConfiguration`, `MVHEVCSampleEntry` (`hvc2`),
-  `MVHEVCPackager` actor (Session 3) — MV-HEVC composition for HLS
-  Spatial Video delivery, per ISO/IEC 14496-15 §I.
+  `MVHEVCPackager` actor — MV-HEVC composition for HLS Spatial
+  Video delivery, per ISO/IEC 14496-15 §I.
 - `EncodedCodec.mvHEVC` / `.mvHEVC10`, `VideoCodec.hvc2`,
-  `VideoCodecConfiguration.mvHEVC(...)` (Session 3) — typed dispatch
-  surface for the multi-view variant.
-- `CMAFSampleTiming` (Session 3) — typed sample-timing wrapper.
+  `VideoCodecConfiguration.mvHEVC(...)` — typed dispatch surface
+  for the multi-view variant.
+- `CMAFSampleTiming` — typed sample-timing wrapper.
 
-#### Codec strings — RFC 6381 (Session 4)
+#### Codec strings — RFC 6381
 
 - `RFC6381CodecDescriptor` 23-case discriminated union spanning the
   full codec matrix CMAFKit emits.
@@ -41,7 +40,7 @@ forbidden patterns introduced.
   §A.5, Apple HLS Authoring §2.2, DASH-IF Implementation Guidelines
   §4.
 
-#### Language tags — BCP 47 / RFC 5646 (Session 5)
+#### Language tags — BCP 47 / RFC 5646
 
 - `BCP47LanguageTag` with full RFC 5646 §2.1 ABNF parser + §4.5
   canonicalisation.
@@ -58,7 +57,7 @@ forbidden patterns introduced.
   `CMAFTrackConfiguration.bcp47Language`,
   `SubtitleFields.bcp47Language` — additive typed accessors.
 
-#### Accessibility primitives (Session 5.5 — insertion session)
+#### Accessibility primitives
 
 - `MediaSelectionRole` (16-case enum capturing track purpose).
 - `AccessibilityFeature` (16-case enum capturing accessibility need).
@@ -77,7 +76,7 @@ forbidden patterns introduced.
   Media Accessibility User Requirements, FCC §79.4, CTA-2065, EBU
   Tech 3370.
 
-#### Audio codecs (Session 6)
+#### Audio codecs
 
 - `EC3JOCExtension` (5-case typed enum) +
   `EC3SpecificBox.jocExtension` + `EC3SpecificBox.carriesDolbyAtmos`
@@ -97,7 +96,7 @@ forbidden patterns introduced.
 - CMAF brands `cup1` / `cup2` per CMAF §7.5.2 (compatibility brands
   for the uncompressed-audio profile).
 
-#### Validators (Session 7)
+#### Validators
 
 - `ISOConformanceValidator` — generic ISO BMFF structural validator
   with 8 rules (I1-I8) per ISO/IEC 14496-12 §4-§8.
@@ -134,7 +133,7 @@ forbidden patterns introduced.
 
 ### Removed
 
-- (Session 1) Three placeholder modules
+- Three placeholder modules
   `Sources/CMAFKit/CodecBitstream/`, `Sources/CMAFKit/CodecSampleEntries/`,
   `Sources/CMAFKit/CMAFProfiles/` (inert `_*Placeholder.swift`
   files, zero public surface — content was relocated during 0.1.0
@@ -152,9 +151,8 @@ forbidden patterns introduced.
 ### Notes
 
 - ~28 new standards covered (cumulative total ~73, vs 45 in 0.1.0).
-- Test count: +656 across the 8 implementation sessions (2 896 in
-  0.1.0 → 3 552 at the end of Session 7).
-- Coverage ≥ 92 % global maintained across every session.
+- Test count: +679 (2 896 in 0.1.0 → 3 575 in 0.1.1).
+- Coverage ≥ 92 % global maintained throughout 0.1.1 implementation.
 - Zero forbidden patterns introduced.
 - All Apple targets build clean (macOS native, Mac Catalyst, iOS,
   iPadOS, tvOS, watchOS, visionOS); Linux builds clean with

@@ -48,19 +48,19 @@ extension RFC6381CodecStringBuilder {
         switch audio.codec {
         case .mp4a:
             // The AAC AOT lives inside esds.decoderConfig.decoderSpecificInfo
-            // (the parsed `AudioSpecificConfig`). The traversal lands in
-            // Session 6 alongside the codec-string wiring for ALAC + PCM.
+            // (the parsed `AudioSpecificConfig`). The traversal is a
+            // planned follow-up; the codec-string surface for ALAC + PCM
+            // is wired.
             throw RFC6381BuilderError.unsupportedCodec(
-                reason: "mp4a codecString(for: configuration:) needs Session 6 esds → AOT wiring"
+                reason: "mp4a codecString(for: configuration:) requires esds → AOT wiring"
             )
         case .ac3: return builder.codecString(for: .ac3)
         case .ec3:
-            // Wire the EC-3 JOC bit from the typed EC3JOCExtension per
-            // Session 6. The codec string itself is always "ec-3" —
-            // Apple HLS Authoring §2.2.4 signals JOC via the
-            // EXT-X-MEDIA CHANNELS attribute, not the codec string;
-            // .joc is consumed by HLSKit / DASHKit for manifest-level
-            // attribute emission.
+            // Wire the EC-3 JOC bit from the typed EC3JOCExtension.
+            // The codec string itself is always "ec-3" — Apple HLS
+            // Authoring §2.2.4 signals JOC via the EXT-X-MEDIA CHANNELS
+            // attribute, not the codec string; .joc is consumed by
+            // HLSKit / DASHKit for manifest-level attribute emission.
             let joc: Bool
             if case let .ec3(specificBox) = audio.codecConfiguration {
                 joc = specificBox.carriesDolbyAtmos

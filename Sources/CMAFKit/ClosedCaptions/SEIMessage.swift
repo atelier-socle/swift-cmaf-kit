@@ -8,9 +8,8 @@
 // zero or more SEI messages; each message has a `payloadType`,
 // a `payloadSize`, and a payload byte run.
 //
-// CMAFKit Session 8 introduced NAL unit type helpers. Session 11
-// completes the SEI surface with the message-level value type
-// plus the typed closed-caption upgrade for the registered ATSC
+// CMAFKit ships NAL unit type helpers plus the message-level value
+// type and the typed closed-caption upgrade for the registered ATSC
 // A/72 user_data payload.
 
 import Foundation

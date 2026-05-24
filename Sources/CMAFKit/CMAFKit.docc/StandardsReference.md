@@ -97,7 +97,7 @@ authoritative text.
 
 ## 0.1.1 additions
 
-### Multi-view HEVC (Sessions 1-3)
+### Multi-view HEVC
 
 - **ITU-T H.265** §F + §I — multi-layer extensions (VPS extension,
   multi-layer SPS).
@@ -105,13 +105,13 @@ authoritative text.
 - **Apple HLS Spatial Video conventions** — `vexu` / `stri` / `hero`
   extension boxes.
 
-### Codec strings (Session 4)
+### Codec strings
 
 - **IETF RFC 6381** — typed codec string construction + parsing
   for all 23 codec families CMAFKit emits.
 - **ISO/IEC 14496-15 §A.5** — CMAF `@codecs` attribute encoding.
 
-### Language tags (Session 5)
+### Language tags
 
 - **IETF RFC 5646 / BCP 47** — Tags for Identifying Languages.
 - **IETF RFC 4647** — Matching of Language Tags.
@@ -122,7 +122,7 @@ authoritative text.
 - **UN M.49** — supra-national numeric region codes.
 - **IANA Language Subtag Registry** — embedded 2026-05 snapshot.
 
-### Accessibility primitives (Session 5.5)
+### Accessibility primitives
 
 - **Apple HLS Authoring Specification §4.6.1-§4.6.5, §4.7** —
   `EXT-X-MEDIA` attributes (CHARACTERISTICS, AUTOSELECT, FORCED,
@@ -147,7 +147,7 @@ authoritative text.
 - **CTA-2065** — Closed Captioning Style guide.
 - **EBU Tech 3370** — Audio Description bindings.
 
-### Audio codecs (Session 6)
+### Audio codecs
 
 - **ETSI TS 102 366 V1.4.1 Annex F.6** — `dec3` trailer byte
   (`ec3_extension_type_a`).
@@ -169,7 +169,7 @@ authoritative text.
 - **CMAF (ISO/IEC 23000-19) §7.5.2** — uncompressed-audio profile
   + `cup1` / `cup2` brands.
 
-### Validators (Session 7)
+### Validators
 
 - **ISO/IEC 14496-12 §4-§8** — explicit ISO BMFF structural
   conformance (``ISOConformanceValidator``).

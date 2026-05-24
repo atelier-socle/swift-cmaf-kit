@@ -3,10 +3,10 @@
 
 // MARK: - CMAFConformanceValidator — ISO + CENC composition accessors
 //
-// Session 7 additive surface. Exposes the two orthogonal validators
-// introduced by Bloc 5e + 5f so that callers (HLSKit / DASHKit /
-// CMAFKitDRM) can compose ISO-layer or CENC-layer validation
-// independently of the CMAF profile rules.
+// Additive surface exposing the two orthogonal validators
+// (`ISOConformanceValidator`, `CENCConformanceValidator`) so that
+// callers (HLSKit / DASHKit / CMAFKitDRM) can compose ISO-layer or
+// CENC-layer validation independently of the CMAF profile rules.
 //
 // These accessors are **purely additive** — the existing
 // `validate(initSegment:mediaSegments:)` entry point and its
