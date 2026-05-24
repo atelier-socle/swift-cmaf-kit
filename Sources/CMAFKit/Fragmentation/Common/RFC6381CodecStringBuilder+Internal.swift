@@ -54,7 +54,20 @@ extension RFC6381CodecStringBuilder {
                 reason: "mp4a codecString(for: configuration:) needs Session 6 esds → AOT wiring"
             )
         case .ac3: return builder.codecString(for: .ac3)
-        case .ec3: return builder.codecString(for: .ec3(joc: false))
+        case .ec3:
+            // Wire the EC-3 JOC bit from the typed EC3JOCExtension per
+            // Session 6. The codec string itself is always "ec-3" —
+            // Apple HLS Authoring §2.2.4 signals JOC via the
+            // EXT-X-MEDIA CHANNELS attribute, not the codec string;
+            // .joc is consumed by HLSKit / DASHKit for manifest-level
+            // attribute emission.
+            let joc: Bool
+            if case let .ec3(specificBox) = audio.codecConfiguration {
+                joc = specificBox.carriesDolbyAtmos
+            } else {
+                joc = false
+            }
+            return builder.codecString(for: .ec3(joc: joc))
         case .ac4: return builder.codecString(for: .ac4(presentationID: nil))
         case .opus: return builder.codecString(for: .opus)
         case .flac: return builder.codecString(for: .flac)
@@ -66,6 +79,10 @@ extension RFC6381CodecStringBuilder {
             return builder.codecString(
                 for: .mpegH(sampleEntry: .mhm2, profileLevelIndication: 0x0C)
             )
+        case .alac: return builder.codecString(for: .alac)
+        case .ipcm: return builder.codecString(for: .pcmIPCM)
+        case .fpcm: return builder.codecString(for: .pcmFPCM)
+        case .lpcm: return builder.codecString(for: .pcmLPCM)
         }
     }
 

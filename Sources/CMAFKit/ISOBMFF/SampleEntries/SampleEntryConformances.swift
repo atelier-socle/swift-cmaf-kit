@@ -96,3 +96,19 @@ extension MPEGHAudioSampleEntryMultiStream: SampleEntry {
 extension EncryptedAudioSampleEntry: SampleEntry {
     public var dataReferenceIndex: UInt16 { audioFields.dataReferenceIndex }
 }
+
+extension ALACSampleEntry: SampleEntry {
+    public var dataReferenceIndex: UInt16 { audioFields.dataReferenceIndex }
+}
+
+extension IntegerPCMSampleEntry: SampleEntry {
+    public var dataReferenceIndex: UInt16 { audioFields.dataReferenceIndex }
+}
+
+extension FloatingPointPCMSampleEntry: SampleEntry {
+    public var dataReferenceIndex: UInt16 { audioFields.dataReferenceIndex }
+}
+
+extension LegacyPCMSampleEntry: SampleEntry {
+    public var dataReferenceIndex: UInt16 { audioFields.dataReferenceIndex }
+}

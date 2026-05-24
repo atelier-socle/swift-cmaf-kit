@@ -91,6 +91,17 @@ public enum AudioCodec: Sendable, Hashable, Equatable, Codable, CaseIterable {
     case mpegHMain
     /// MPEG-H 3D Audio, multi-stream (`mhm2`).
     case mpegHMultiStream
+    /// Apple Lossless (`alac`) per the Apple ALAC public specification.
+    case alac
+    /// Integer PCM (`ipcm`) per ISO/IEC 23003-5 §4 — CMAF uncompressed
+    /// integer audio.
+    case ipcm
+    /// Floating-point PCM (`fpcm`) per ISO/IEC 23003-5 §4 — CMAF
+    /// uncompressed IEEE 754 audio.
+    case fpcm
+    /// Legacy QuickTime PCM (`lpcm`) per ISO/IEC 14496-12 §12.2.3 with
+    /// version-1 audio sample entry.
+    case lpcm
 
     /// The on-wire sample-entry FourCC for this codec.
     public var sampleEntryFourCC: FourCC {
@@ -103,6 +114,10 @@ public enum AudioCodec: Sendable, Hashable, Equatable, Codable, CaseIterable {
         case .flac: return "fLaC"
         case .mpegHMain: return "mhm1"
         case .mpegHMultiStream: return "mhm2"
+        case .alac: return "alac"
+        case .ipcm: return "ipcm"
+        case .fpcm: return "fpcm"
+        case .lpcm: return "lpcm"
         }
     }
 }

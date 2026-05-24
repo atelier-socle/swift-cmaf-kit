@@ -23,6 +23,14 @@ public enum AudioCodecConfiguration: Sendable, Equatable, Hashable {
     case opus(OpusSpecificBox)
     case flac(FLACSpecificBox)
     case mpegH(MPEGHConfigurationBox)
+    case alac(ALACSpecificBox)
+    case integerPCM(PCMConfigurationBox)
+    case floatingPointPCM(PCMConfigurationBox)
+    /// Legacy lpcm has no separate config box — the version-1 audio
+    /// fields ARE the configuration. The associated value carries the
+    /// V1 fields used by the composer to build the `lpcm` sample
+    /// entry's audio header.
+    case legacyPCM(v1Fields: AudioSampleEntryFields.V1Fields)
 
     public var boxType: FourCC {
         switch self {
@@ -33,6 +41,9 @@ public enum AudioCodecConfiguration: Sendable, Equatable, Hashable {
         case .opus: return OpusSpecificBox.boxType
         case .flac: return FLACSpecificBox.boxType
         case .mpegH: return MPEGHConfigurationBox.boxType
+        case .alac: return ALACSpecificBox.boxType
+        case .integerPCM, .floatingPointPCM: return PCMConfigurationBox.boxType
+        case .legacyPCM: return "lpcm"
         }
     }
 
@@ -45,6 +56,12 @@ public enum AudioCodecConfiguration: Sendable, Equatable, Hashable {
         case .opus(let r): r.encode(to: &writer)
         case .flac(let r): r.encode(to: &writer)
         case .mpegH(let r): r.encode(to: &writer)
+        case .alac(let r): r.encode(to: &writer)
+        case .integerPCM(let r), .floatingPointPCM(let r): r.encode(to: &writer)
+        case .legacyPCM:
+            // lpcm has no separate config box — the v1 fields are
+            // emitted by the parent AudioSampleEntryFields.
+            break
         }
     }
 }
@@ -137,6 +154,31 @@ public struct EncryptedAudioSampleEntry: ISOBox, Sendable, Equatable, Hashable {
                         reader: &reader, header: childHeader, registry: registry
                     )
                 )
+            case ALACSpecificBox.boxType
+            where childHeader.size <= 48:
+                // The `alac` fourCC collides with the parent
+                // ALACSampleEntry; inside an enca context we
+                // distinguish by size — the magic cookie is 36 / 40
+                // bytes total whereas an ALACSampleEntry body is much
+                // larger.
+                _ = try isoBoxReader.parseBoxHeader(&reader)
+                codecConfig = .alac(
+                    try await ALACSpecificBox.parse(
+                        reader: &reader, header: childHeader, registry: registry
+                    )
+                )
+            case PCMConfigurationBox.boxType:
+                // `pcmC` alone cannot distinguish integer vs float —
+                // the original format (preserved in sinf.originalFormat)
+                // disambiguates. Default to .integerPCM here; the
+                // resolver fixes the discriminator using the original
+                // format fourCC.
+                _ = try isoBoxReader.parseBoxHeader(&reader)
+                codecConfig = .integerPCM(
+                    try await PCMConfigurationBox.parse(
+                        reader: &reader, header: childHeader, registry: registry
+                    )
+                )
             case ProtectionSchemeInfoBox.boxType:
                 _ = try isoBoxReader.parseBoxHeader(&reader)
                 sinf = try await ProtectionSchemeInfoBox.parse(
@@ -166,6 +208,24 @@ public struct EncryptedAudioSampleEntry: ISOBox, Sendable, Equatable, Hashable {
                 type: Self.boxType,
                 reason: "enca missing mandatory sinf child"
             )
+        }
+        // Rewire the codec configuration using the original-format
+        // fourCC carried in sinf:
+        // - pcmC + originalFormat == "fpcm" → reclassify as
+        //   .floatingPointPCM (the inner box alone cannot
+        //   discriminate integer vs float).
+        // - originalFormat == "lpcm" + no inner config box → derive
+        //   `.legacyPCM` from the audio sample entry's V1 fields.
+        let originalFormat = resolvedSinf.originalFormat.dataFormat
+        switch (codecConfig, originalFormat) {
+        case (.some(.integerPCM(let pcm)), "fpcm"):
+            codecConfig = .floatingPointPCM(pcm)
+        case (nil, "lpcm"):
+            if let v1 = fields.v1Fields {
+                codecConfig = .legacyPCM(v1Fields: v1)
+            }
+        default:
+            break
         }
         guard let resolvedCodec = codecConfig else {
             throw ISOBoxError.malformedFullBox(

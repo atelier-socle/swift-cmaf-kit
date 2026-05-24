@@ -4,11 +4,17 @@
 // MARK: - BoxRegistry audio sample-entry builtins
 //
 // Registers parsers for:
-//   • 9 audio sample entries: mp4a, ac-3, ec-3, ac-4, Opus, fLaC,
-//                             mhm1, mhm2, enca
-//   • 7 configuration / metadata boxes: dac3, dec3, dac4, dOps, dfLa,
-//                                       mhaC, mhaP
+//   • 13 audio sample entries: mp4a, ac-3, ec-3, ac-4, Opus, fLaC,
+//                              mhm1, mhm2, enca, alac, ipcm, fpcm, lpcm
+//   • 8 configuration / metadata boxes: dac3, dec3, dac4, dOps, dfLa,
+//                                       mhaC, mhaP, pcmC
 //   • 2 audio extension boxes: chnl, srat
+//
+// Note: `ALACSpecificBox` (fourCC `alac`, child of `ALACSampleEntry`)
+// is intentionally NOT registered here — it collides with the parent
+// `ALACSampleEntry` fourCC. `ALACSampleEntry.parse` reads the inner
+// magic-cookie box manually (mirroring the FLACSampleEntry pattern
+// adapted for same-fourCC ALAC).
 
 import Foundation
 
@@ -52,6 +58,18 @@ extension BoxRegistry {
         register(EncryptedAudioSampleEntry.self) { reader, header, registry in
             try await EncryptedAudioSampleEntry.parse(reader: &reader, header: header, registry: registry)
         }
+        register(ALACSampleEntry.self) { reader, header, registry in
+            try await ALACSampleEntry.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(IntegerPCMSampleEntry.self) { reader, header, registry in
+            try await IntegerPCMSampleEntry.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(FloatingPointPCMSampleEntry.self) { reader, header, registry in
+            try await FloatingPointPCMSampleEntry.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(LegacyPCMSampleEntry.self) { reader, header, registry in
+            try await LegacyPCMSampleEntry.parse(reader: &reader, header: header, registry: registry)
+        }
     }
 
     private func registerAudioConfigurationBoxes() {
@@ -75,6 +93,9 @@ extension BoxRegistry {
         }
         register(MPEGHProfileLevelCompatibilitySetBox.self) { reader, header, registry in
             try await MPEGHProfileLevelCompatibilitySetBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(PCMConfigurationBox.self) { reader, header, registry in
+            try await PCMConfigurationBox.parse(reader: &reader, header: header, registry: registry)
         }
     }
 
