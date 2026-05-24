@@ -109,6 +109,46 @@ internal enum AudioSampleEntryResolver {
                 extensions: e.extensions,
                 sinf: nil
             )
+        case let e as ALACSampleEntry:
+            return base(
+                codec: .alac,
+                config: .alac(e.specificBox),
+                fields: e.audioFields,
+                extensions: e.extensions,
+                sinf: nil
+            )
+        case let e as IntegerPCMSampleEntry:
+            return base(
+                codec: .ipcm,
+                config: .integerPCM(e.pcmConfiguration),
+                fields: e.audioFields,
+                extensions: e.extensions,
+                sinf: nil
+            )
+        case let e as FloatingPointPCMSampleEntry:
+            return base(
+                codec: .fpcm,
+                config: .floatingPointPCM(e.pcmConfiguration),
+                fields: e.audioFields,
+                extensions: e.extensions,
+                sinf: nil
+            )
+        case let e as LegacyPCMSampleEntry:
+            // lpcm carries v1Fields inline in audioFields; precondition
+            // on init guarantees v1Fields is non-nil.
+            guard let v1 = e.audioFields.v1Fields else {
+                throw CMAFReaderError.unexpectedBoxAtLevel(
+                    parent: "stsd",
+                    found: LegacyPCMSampleEntry.boxType
+                )
+            }
+            return base(
+                codec: .lpcm,
+                config: .legacyPCM(v1Fields: v1),
+                fields: e.audioFields,
+                extensions: e.extensions,
+                sinf: nil
+            )
         case let e as EncryptedAudioSampleEntry:
             let codec = codecFromOriginalFormat(
                 e.protectionSchemeInfo.originalFormat.dataFormat
@@ -157,6 +197,10 @@ internal enum AudioSampleEntryResolver {
         case "fLaC": return .flac
         case "mhm1": return .mpegHMain
         case "mhm2": return .mpegHMultiStream
+        case "alac": return .alac
+        case "ipcm": return .ipcm
+        case "fpcm": return .fpcm
+        case "lpcm": return .lpcm
         default: return .mp4a
         }
     }

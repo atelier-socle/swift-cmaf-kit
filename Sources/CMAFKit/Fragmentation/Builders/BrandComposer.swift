@@ -159,6 +159,13 @@ public enum BrandComposer {
         case .opus: return ["opus"]
         case .flac: return ["flac"]
         case .mpegHMain, .mpegHMultiStream: return ["mhm1"]
+        case .alac: return ["alac"]
+        // CMAF (ISO/IEC 23000-19) §7.5.2 — CMAF Uncompressed Audio
+        // brands "cup1" / "cup2" cover ipcm / fpcm / lpcm; emit them
+        // as compatibility brands for receivers that filter on the
+        // uncompressed profile.
+        case .ipcm, .fpcm: return ["cup1"]
+        case .lpcm: return ["cup2"]
         }
     }
 

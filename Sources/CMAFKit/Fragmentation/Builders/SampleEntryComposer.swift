@@ -302,6 +302,57 @@ internal enum SampleEntryComposer {
                 configuration: specific,
                 extensions: extensions
             )
+        case .alac:
+            guard case let .alac(specific) = audio.codecConfiguration else {
+                throw CMAFWriterError.configurationInvalid(
+                    reason: "alac requires .alac codec configuration"
+                )
+            }
+            return ALACSampleEntry(
+                audioFields: audioFields,
+                specificBox: specific,
+                extensions: extensions
+            )
+        case .ipcm:
+            guard case let .integerPCM(specific) = audio.codecConfiguration else {
+                throw CMAFWriterError.configurationInvalid(
+                    reason: "ipcm requires .integerPCM codec configuration"
+                )
+            }
+            return IntegerPCMSampleEntry(
+                audioFields: audioFields,
+                pcmConfiguration: specific,
+                extensions: extensions
+            )
+        case .fpcm:
+            guard case let .floatingPointPCM(specific) = audio.codecConfiguration else {
+                throw CMAFWriterError.configurationInvalid(
+                    reason: "fpcm requires .floatingPointPCM codec configuration"
+                )
+            }
+            return FloatingPointPCMSampleEntry(
+                audioFields: audioFields,
+                pcmConfiguration: specific,
+                extensions: extensions
+            )
+        case .lpcm:
+            guard case let .legacyPCM(v1Fields) = audio.codecConfiguration else {
+                throw CMAFWriterError.configurationInvalid(
+                    reason: "lpcm requires .legacyPCM codec configuration"
+                )
+            }
+            let v1AudioFields = AudioSampleEntryFields(
+                dataReferenceIndex: audioFields.dataReferenceIndex,
+                version: .v1,
+                channelCount: audioFields.channelCount,
+                sampleSize: audioFields.sampleSize,
+                sampleRate: audioFields.sampleRate,
+                v1Fields: v1Fields
+            )
+            return LegacyPCMSampleEntry(
+                audioFields: v1AudioFields,
+                extensions: extensions
+            )
         }
     }
 
