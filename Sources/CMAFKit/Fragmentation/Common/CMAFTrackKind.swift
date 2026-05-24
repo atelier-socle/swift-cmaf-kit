@@ -55,6 +55,11 @@ public enum VideoCodec: Sendable, Hashable, Equatable, Codable, CaseIterable {
     case vp09
     case av01
     case mp4v
+    /// Multi-Layer HEVC sample entry per ISO/IEC 14496-15 §8.4 (`hvc2`).
+    /// Used for Apple Vision Pro Spatial Video and other multi-view HEVC
+    /// scenarios. The associated codec configuration is
+    /// ``VideoCodecConfiguration/mvHEVC(configuration:viewExtendedUsage:stereoInformation:heroEye:)``.
+    case hvc2
 
     /// The on-wire sample-entry FourCC for this codec.
     public var sampleEntryFourCC: FourCC {
@@ -69,6 +74,7 @@ public enum VideoCodec: Sendable, Hashable, Equatable, Codable, CaseIterable {
         case .vp09: return "vp09"
         case .av01: return "av01"
         case .mp4v: return "mp4v"
+        case .hvc2: return "hvc2"
         }
     }
 }

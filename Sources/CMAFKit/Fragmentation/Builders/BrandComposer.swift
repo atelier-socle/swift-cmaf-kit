@@ -143,6 +143,7 @@ public enum BrandComposer {
         case .vp09: return ["vp09"]
         case .av01: return ["av01"]
         case .mp4v: return ["mp4v"]
+        case .hvc2: return ["hvc2", "mvhc"]
         }
     }
 

@@ -23,9 +23,22 @@ public enum VideoCodecConfiguration: Sendable, Equatable, Hashable {
     case vp(VPCodecConfigurationRecord)
     case av1(AV1CodecConfigurationRecord)
     case mp4Visual(ElementaryStreamDescriptor)
+    /// Multi-Layer HEVC configuration carrying the multi-layer record and the
+    /// Apple HEVC Stereo Video Profile boxes that travel with it.
+    ///
+    /// Reference: ISO/IEC 14496-15 §8.4 + Apple HEVC Stereo Video Profile.
+    case mvHEVC(
+        configuration: MultiLayerHEVCConfiguration,
+        viewExtendedUsage: ViewExtendedUsageBox,
+        stereoInformation: StereoInformationBox?,
+        heroEye: HeroEyeInformationBox?
+    )
 
     /// The FourCC that would identify this configuration as a child
     /// of the unencrypted sample entry (e.g., `avcC` for AVC).
+    /// For multi-layer HEVC the primary child box is the base-layer
+    /// `hvcC`; the multi-layer record and Apple stereo boxes live as
+    /// additional siblings inside the `hvc2` sample entry.
     public var boxType: FourCC {
         switch self {
         case .avc: return AVCDecoderConfigurationRecord.boxType
@@ -33,6 +46,7 @@ public enum VideoCodecConfiguration: Sendable, Equatable, Hashable {
         case .vp: return VPCodecConfigurationRecord.boxType
         case .av1: return AV1CodecConfigurationRecord.boxType
         case .mp4Visual: return ElementaryStreamDescriptor.boxType
+        case .mvHEVC: return HEVCDecoderConfigurationRecord.boxType
         }
     }
 
@@ -43,6 +57,25 @@ public enum VideoCodecConfiguration: Sendable, Equatable, Hashable {
         case .vp(let r): r.encode(to: &writer)
         case .av1(let r): r.encode(to: &writer)
         case .mp4Visual(let r): r.encode(to: &writer)
+        case .mvHEVC(let config, let vexu, let stri, let hero):
+            // Encrypted MV-HEVC preservation: emit the base hvcC, the
+            // optional extension hvcC, then the Apple stereo boxes that
+            // travel with the configuration. The multi-layer record itself
+            // is wrapped in an `mhcC` box per the convention established
+            // in MVHEVCSampleEntry.
+            config.baseLayer.encode(to: &writer)
+            if let ext = config.extensionLayer {
+                ext.encode(to: &writer)
+            }
+            vexu.encode(to: &writer)
+            stri?.encode(to: &writer)
+            hero?.encode(to: &writer)
+            var mlBody = BinaryWriter()
+            config.encode(to: &mlBody)
+            writer.writeBox(
+                type: MVHEVCSampleEntry.multiLayerConfigBoxType,
+                body: mlBody.data
+            )
         }
     }
 }

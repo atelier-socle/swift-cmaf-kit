@@ -20,6 +20,12 @@ public enum EncodedCodec: Sendable, Hashable {
     case h265
     /// Multi-layer HEVC (MV-HEVC), `hvc2`-class sample entries.
     case h265MultiLayer
+    /// Multi-Layer Main / Multiview Main HEVC per ISO/IEC 14496-15 §8.4.
+    /// 8-bit depth profile family (Apple Vision Pro Spatial Video default).
+    case mvHEVC
+    /// Multi-Layer Main 10 / Three-Dimensional Main 10 HEVC per
+    /// ISO/IEC 14496-15 §8.4 and ITU-T H.265 §I.A.4. 10-bit depth profile.
+    case mvHEVC10
     /// AV1.
     case av1
     /// Apple ProRes (with profile flavor).

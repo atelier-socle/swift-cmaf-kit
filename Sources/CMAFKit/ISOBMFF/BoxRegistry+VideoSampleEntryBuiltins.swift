@@ -4,8 +4,11 @@
 // MARK: - BoxRegistry video sample-entry builtins
 //
 // Registers parsers for:
-//   • 11 video sample entries: avc1, avc3, hvc1, hev1, dvh1, dvhe,
-//                              vp08, vp09, av01, mp4v, encv
+//   • 12 video sample entries: avc1, avc3, hvc1, hev1, dvh1, dvhe,
+//                              hvc2, vp08, vp09, av01, mp4v, encv
+//                              (hvc2 is Multi-Layer HEVC per
+//                              ISO/IEC 14496-15 §8.4 — Apple Vision Pro
+//                              Spatial Video carriage)
 //   • 5 configuration records: avcC, hvcC, vpcC, av1C, esds
 //   • 6 extension boxes:       pasp, clap, btrt, vexu, stri, hero
 //                              (vexu/stri/hero are Apple HEVC Stereo
@@ -43,6 +46,9 @@ extension BoxRegistry {
         }
         register(DolbyVisionHEVCSampleEntryInband.self) { reader, header, registry in
             try await DolbyVisionHEVCSampleEntryInband.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(MVHEVCSampleEntry.self) { reader, header, registry in
+            try await MVHEVCSampleEntry.parse(reader: &reader, header: header, registry: registry)
         }
         register(VP8SampleEntry.self) { reader, header, registry in
             try await VP8SampleEntry.parse(reader: &reader, header: header, registry: registry)
