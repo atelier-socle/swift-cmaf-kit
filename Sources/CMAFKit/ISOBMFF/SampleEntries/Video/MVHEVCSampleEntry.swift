@@ -23,9 +23,9 @@
 //   └───────────────────────────────────────────────────────────────────┘
 //
 // Equatable / Hashable are synthesized — every field is a typed value
-// type (Session 1/2 types) or a typed Optional thereof. `optionalBoxes`
-// is `[ISOBoxOpaque]` which conforms to Equatable + Hashable, so the
-// synthesis composes cleanly.
+// type or a typed Optional thereof. `optionalBoxes` is `[ISOBoxOpaque]`
+// which conforms to Equatable + Hashable, so the synthesis composes
+// cleanly.
 
 import Foundation
 
@@ -67,13 +67,12 @@ public struct MVHEVCSampleEntry: ISOBox, Sendable, Equatable, Hashable {
 
     /// View Extended Usage Box — **mandatory** for Apple Vision Pro
     /// Spatial Video per the Apple HEVC Stereo Video Profile.
-    /// Reuses the Session 2 type.
     public let vexu: ViewExtendedUsageBox
 
-    /// Optional Stereo Information Box (Session 2 type).
+    /// Optional Stereo Information Box.
     public let stri: StereoInformationBox?
 
-    /// Optional Hero Eye Information Box (Session 2 type).
+    /// Optional Hero Eye Information Box.
     public let hero: HeroEyeInformationBox?
 
     /// Optional Multi-Layer HEVC Configuration Record (ISO/IEC 14496-15

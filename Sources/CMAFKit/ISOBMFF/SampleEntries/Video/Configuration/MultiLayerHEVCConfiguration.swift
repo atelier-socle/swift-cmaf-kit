@@ -25,7 +25,7 @@ import Foundation
 /// the stream. The record declares:
 /// - per-layer decoder configuration records (base + optional extension),
 /// - the layer identifier / temporal-identifier vectors,
-/// - the layer dependency graph (reuses Session 2's ``LayerDependency``),
+/// - the layer dependency graph (reuses ``LayerDependency``),
 /// - per-view / per-aux scalability identifiers,
 /// - the output layer sets referenced by the multi-layer stream.
 ///
@@ -54,7 +54,7 @@ public struct MultiLayerHEVCConfiguration: Sendable, Equatable, Hashable {
     /// ``layerIDs``.
     public let temporalIDs: [UInt8]
 
-    /// Layer dependencies per ITU-T H.265 §F.7.4.3.1 — reuses Session 2's
+    /// Layer dependencies per ITU-T H.265 §F.7.4.3.1 — reuses the
     /// ``LayerDependency`` value type.
     public let layerDependencies: [LayerDependency]
 

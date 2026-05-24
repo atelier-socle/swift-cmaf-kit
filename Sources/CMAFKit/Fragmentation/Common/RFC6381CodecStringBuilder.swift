@@ -40,11 +40,10 @@ public struct RFC6381CodecStringBuilder: Sendable {
     /// configuration.
     ///
     /// Reads the codec from the track's `codecConfiguration` and emits
-    /// the matching string. Sessions 5-6 wire the remaining audio codecs
-    /// (ALAC, PCM ipcm/fpcm/lpcm); calling `codecString(for:)` on a
-    /// track configured for those codecs throws
-    /// ``RFC6381BuilderError/unsupportedCodec(reason:)`` until those
-    /// sessions land.
+    /// the matching string. The AAC (`mp4a`) AOT extraction from
+    /// `esds` is the remaining unwired path; calling `codecString(for:)`
+    /// on an `mp4a` track configuration throws
+    /// ``RFC6381BuilderError/unsupportedCodec(reason:)``.
     ///
     /// - Throws:
     ///   - ``RFC6381BuilderError/unsupportedCodec(reason:)`` — the codec

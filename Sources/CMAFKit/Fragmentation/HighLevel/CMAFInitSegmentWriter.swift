@@ -18,7 +18,7 @@
 //
 //   1. Rewrites the sample-entry FourCC to `encv` / `enca` and
 //      composes the full `sinf` / `frma` / `schm` / `schi` / `tenc`
-//      group from Session 9.
+//      group.
 //   2. Emits each provided `pssh` box at the `moov` level per
 //      ISO/IEC 23001-7 §8.1.
 //

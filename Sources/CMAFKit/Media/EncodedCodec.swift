@@ -10,8 +10,8 @@ import Foundation
 
 /// A codec identifier, optionally carrying profile or sub-format information.
 ///
-/// Used by `EncodedFrame`, `CMAFAudioConfiguration`, and `CMAFVideoConfiguration`
-/// (the latter two land in later sessions).
+/// Used by `EncodedFrame` and the high-level CMAF audio and video
+/// configuration aggregates.
 public enum EncodedCodec: Sendable, Hashable {
     // Video
     /// H.264 / AVC.

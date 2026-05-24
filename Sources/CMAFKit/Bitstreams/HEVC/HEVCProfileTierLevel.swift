@@ -7,7 +7,7 @@
 //
 // The profile / tier / level subtree carries the general layer's
 // profile signalling plus an optional series of sub-layer profile /
-// level fields. CMAFKit reuses Session 6's `HEVCProfileSpace`,
+// level fields. CMAFKit reuses the `HEVCProfileSpace`,
 // `HEVCTierFlag`, `HEVCProfileIDC`, `HEVCProfileCompatibilityFlags`,
 // `HEVCConstraintIndicatorFlags`, and `HEVCLevelIDC` enums for the
 // typed fields.

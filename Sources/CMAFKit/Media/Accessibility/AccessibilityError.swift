@@ -6,9 +6,9 @@
 // Typed errors for ``AccessibilityMetadata`` construction and
 // cross-format mapping. Most accessibility primitive parsing in 0.1.1
 // is permissive (unknown URIs / schemes fall back to `.custom`); these
-// errors are exposed for stricter-validation paths added by Session 7
-// validators or by HLSKit / DASHKit consumers that require strict
-// conformance to a published spec snapshot.
+// errors are exposed for stricter-validation paths added by the
+// validators surface or by HLSKit / DASHKit consumers that require
+// strict conformance to a published spec snapshot.
 
 import Foundation
 
@@ -16,7 +16,7 @@ import Foundation
 ///
 /// Most accessibility primitive parsing is permissive — unknown URIs
 /// or scheme values are preserved verbatim via `.custom` cases. These
-/// errors surface only in strict-validation paths (Session 7
+/// errors surface only in strict-validation paths (the conformance
 /// validators, HLSKit / DASHKit emitters that refuse to ship
 /// non-conformant metadata).
 ///

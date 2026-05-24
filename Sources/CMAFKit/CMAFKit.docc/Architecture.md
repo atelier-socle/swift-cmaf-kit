@@ -20,24 +20,22 @@ upper layers.
 The 0.1.1 patch adds the following submodules (all purely additive,
 respecting the layered constraints):
 
-- `Sources/CMAFKit/Media/Languages/` — BCP 47 typed language tags
-  (Session 5). Sits at Layer 1 (Media). See
-  <doc:LanguageTagsReference>.
+- `Sources/CMAFKit/Media/Languages/` — BCP 47 typed language tags.
+  Sits at Layer 1 (Media). See <doc:LanguageTagsReference>.
 - `Sources/CMAFKit/Media/Accessibility/` — cross-format
-  accessibility primitives (Session 5.5). Sits at Layer 1 (Media).
-  See <doc:AccessibilityReference>.
+  accessibility primitives. Sits at Layer 1 (Media). See
+  <doc:AccessibilityReference>.
 - Typed members under `Sources/CMAFKit/ISOBMFF/SampleEntries/Audio/`
-  for ALAC / PCM (Session 6) and `EC3JOCExtension` typed enum +
+  for ALAC / PCM and the `EC3JOCExtension` typed enum +
   `EC3SpecificBox+JOC` extension. See <doc:AudioCodecsReference>.
 - Members under `Sources/CMAFKit/Bitstreams/HEVC/` +
   `Sources/CMAFKit/ISOBMFF/SampleEntries/Video/` for multi-view
-  HEVC (Sessions 1-3). See <doc:MVHEVCGuide>.
+  HEVC. See <doc:MVHEVCGuide>.
 - `Sources/CMAFKit/Fragmentation/Common/RFC6381CodecStringBuilder*.swift`
-  for RFC 6381 codec strings (Session 4). See
-  <doc:CodecStringReference>.
+  for RFC 6381 codec strings. See <doc:CodecStringReference>.
 - `Sources/CMAFKit/Validator/ISOConformanceValidator*.swift` +
   `CENCConformanceValidator*.swift` for the box-array-layer
-  validators (Session 7). See <doc:ValidatorsHierarchy>.
+  validators. See <doc:ValidatorsHierarchy>.
 
 Every 0.1.1 addition preserves the v0.1.0 public surface
 byte-identically — see the project CHANGELOG for the complete

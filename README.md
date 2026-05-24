@@ -19,8 +19,8 @@ A pure-Swift implementation of the Common Media Application Format (ISO/IEC 2300
 
 ## What's new in 0.1.1
 
-Eight sessions of "no-compromise completion" work, every primitive
-shipping with full spec citations and round-trip tests.
+A no-compromise completion pass over the 0.1.0 surface, every
+primitive shipping with full spec citations and round-trip tests.
 
 | Module | New primitives | Use case |
 |---|---|---|
@@ -33,11 +33,11 @@ shipping with full spec citations and round-trip tests.
 
 ### Metrics
 
-- **+656 tests** (2 896 → 3 552 across 8 sessions before the showcase round)
+- **+679 tests** (2 896 → 3 575)
 - **+28 standards** covered
 - **Zero public symbol removed** since v0.1.0
 - **Zero forbidden patterns** introduced
-- **Coverage** ≥ 92 % global maintained across all sessions
+- **Coverage** ≥ 92 % global maintained throughout 0.1.1
 
 ### Documentation
 

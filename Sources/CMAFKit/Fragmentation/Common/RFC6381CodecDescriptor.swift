@@ -20,7 +20,7 @@ import Foundation
 ///
 /// One case per codec family; parameters carry the bits the codec string
 /// encodes (profile, level, chroma subsampling, bit depth, etc.). Reuses
-/// existing 0.1.0 + Session 1-3 enum types (e.g., ``DolbyVisionProfile``,
+/// the existing enum types (e.g., ``DolbyVisionProfile``,
 /// ``AACProfile``) — does not redefine codec parameters.
 ///
 /// References:
@@ -171,19 +171,15 @@ public enum RFC6381CodecDescriptor: Sendable, Equatable, Hashable {
     case flac
 
     /// `alac` per Apple ALAC public specification (open-sourced 2011).
-    /// Session 6 wires the path from ``CMAFTrackConfiguration``.
     case alac
 
     /// `ipcm` per ISO/IEC 23003-5 §6.2 (integer PCM).
-    /// Session 6 wires the path from ``CMAFTrackConfiguration``.
     case pcmIPCM
 
     /// `fpcm` per ISO/IEC 23003-5 §6.3 (floating-point PCM).
-    /// Session 6 wires the path from ``CMAFTrackConfiguration``.
     case pcmFPCM
 
     /// `lpcm` per ISO/IEC 14496-12 §12.2.3 (legacy ISO PCM).
-    /// Session 6 wires the path from ``CMAFTrackConfiguration``.
     case pcmLPCM
 
     // MARK: Subtitle
@@ -303,9 +299,10 @@ public struct HEVCProfileDescriptor: Sendable, Equatable, Hashable, Codable {
 /// Typed errors thrown by ``RFC6381CodecStringBuilder``.
 public enum RFC6381BuilderError: Error, Equatable {
     /// The codec is recognised but not yet wired through
-    /// `codecString(for: configuration:)` in 0.1.1 (the dispatch from
-    /// ``CMAFTrackConfiguration`` for that codec lands in a later
-    /// session). The descriptor-level builder still works.
+    /// `codecString(for: configuration:)` in this release (the
+    /// dispatch from ``CMAFTrackConfiguration`` for that codec is
+    /// planned for a follow-up). The descriptor-level builder still
+    /// works.
     case unsupportedCodec(reason: String)
 
     /// The codec string failed to parse. The full input is included in

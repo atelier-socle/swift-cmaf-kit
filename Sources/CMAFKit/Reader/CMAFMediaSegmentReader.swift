@@ -5,7 +5,7 @@
 //
 // Reference: ISO/IEC 23000-19 §7.3 (CMAF Fragment) and ISO/IEC
 // 14496-12 §8.8 (`moof`+`mdat`). Companion to the writer actor in
-// Module 9 (Session 10).
+// Module 9.
 //
 // Stateful actor that ingests media-segment bytes and yields
 // typed ``CMAFParsedSample`` instances per call. The actor
