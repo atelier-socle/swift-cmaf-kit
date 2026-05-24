@@ -2,34 +2,163 @@
 
 All notable changes to this project are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.1] — 2026-05-25
+
+Patch release closing the no-compromise completion of the 0.1.0
+surface. Required for HLSKit 0.7.0 migration and future DASHKit 0.1.0
+enablement. Eight implementation sessions plus a final
+documentation + audit session. Zero breaking change on the v0.1.0
+public surface. Zero public symbol removed since v0.1.0. Zero
+forbidden patterns introduced.
 
 ### Added
 
-#### CMAFKit
+#### Multi-view HEVC and Apple Vision Pro spatial video (Sessions 1-3)
 
-- (Session 1) `HEVCParameterSets` aggregate type for HEVC VPS/SPS/PPS extraction from a NAL stream, per ITU-T H.265 §7.3.2 + ISO/IEC 14496-15 §8.3.3.1.
-- (Session 2-3) MV-HEVC (Multi-View HEVC) complete container support — `MVHEVCSampleEntry` (`hvc2`), `MultiLayerHEVCConfiguration`, Apple HEVC Stereo Video Profile boxes (`vexu`, `stri`, `hero`), `MVHEVCPackager` actor, per ISO/IEC 14496-15 §8.4 + §I, ITU-T H.265 §F + §I, and Apple HEVC Stereo Video Profile.
-- (Session 4) `RFC6381CodecStringBuilder` for canonical codec string generation and parsing, per IETF RFC 6381, ISO/IEC 14496-15 §A.5, Apple HLS Authoring §2.2, and DASH-IF Implementation Guidelines §4.
-- (Session 5) `BCP47LanguageTag` typed struct + ISO 639-2/T ↔ BCP 47 bridge, per RFC 5646, RFC 4647, ISO 639-1/2/3, ISO 15924, ISO 3166-1, UN M.49, and the IANA Language Subtag Registry.
-- (Session 5.5) Cross-format accessibility primitives — `MediaSelectionRole` (16 cases), `AccessibilityFeature` (16 cases), `AccessibilityCharacteristic` (7 typed Apple URIs + `.custom`), `AudioPurpose` (DVB TVA codes 0..7), `AccessibilityMetadata` aggregate with HLS↔DASH cross-format mapping tables + `carriesEUAccessibilityActFeature` compliance helper, per Apple HLS Authoring §4.6, ISO/IEC 23009-1 §5.8.4-§5.8.5.5, DASH-IF Implementation Guidelines v5.0+ §6.6, DVB-DASH (ETSI TS 103 285) §5.2, ETSI EN 301 549 §7.1, EU Directive 2019/882 (European Accessibility Act 28 June 2025), W3C Media Accessibility User Requirements, FCC §79.4, CTA-2065, EBU Tech 3370. Additive `accessibility: AccessibilityMetadata?` field on `CMAFTrackConfiguration` + nested `SubtitleFields` (Option A storage, default `nil` preserves v0.1.0 back-compat).
-- (Session 6) `EC3JOCExtension` typed enum for first-class Dolby Atmos detection in E-AC-3 streams, per ETSI TS 102 366 Annex H.
-- (Session 6) `ALACSampleEntry` + `ALACSpecificBox` for Apple Lossless audio (lossless distribution / archival), per Apple ALAC Reference Implementation (public 2011) + ISO/IEC 14496-12 §12.2.
-- (Session 6) PCM sample entries — `IntegerPCMSampleEntry` (`ipcm`), `FloatingPointPCMSampleEntry` (`fpcm`), `LegacyPCMSampleEntry` (`lpcm`) + `PCMConfigurationBox` (`pcmC`), per ISO/IEC 23003-5 and ISO/IEC 14496-12 §12.2.3.
-- (Session 7) `ISOConformanceValidator` — generic ISO BMFF structural validator (8 rules I1-I8), independent of CMAF profile, per ISO/IEC 14496-12 §4 + §8.
-- (Session 7) `CENCConformanceValidator` — ISO/IEC 23001-7 Common Encryption validator (8 rules C1-C8), extracted from `CMAFConformanceValidator` for orthogonal validator composition.
+- `HEVCParameterSets` aggregate (Session 1) — VPS/SPS/PPS triplet
+  extracted from a NAL stream, per ITU-T H.265 §7.3.2 + ISO/IEC
+  14496-15 §8.3.3.1.
+- `HEVCVPSExtension`, `HEVCMultiLayerSPS`,
+  `HEVCMultiLayerScalingListData` (Session 2) — multi-layer HEVC
+  bitstream foundation per ITU-T H.265 §F + §I.
+- `ViewExtendedUsageBox` (`vexu`), `StereoInformationBox` (`stri`),
+  `HeroEyeInformationBox` (`hero`) (Session 2) — Apple HLS Spatial
+  Video extension boxes.
+- `MultiLayerHEVCConfiguration`, `MVHEVCSampleEntry` (`hvc2`),
+  `MVHEVCPackager` actor (Session 3) — MV-HEVC composition for HLS
+  Spatial Video delivery, per ISO/IEC 14496-15 §I.
+- `EncodedCodec.mvHEVC` / `.mvHEVC10`, `VideoCodec.hvc2`,
+  `VideoCodecConfiguration.mvHEVC(...)` (Session 3) — typed dispatch
+  surface for the multi-view variant.
+- `CMAFSampleTiming` (Session 3) — typed sample-timing wrapper.
+
+#### Codec strings — RFC 6381 (Session 4)
+
+- `RFC6381CodecDescriptor` 23-case discriminated union spanning the
+  full codec matrix CMAFKit emits.
+- `RFC6381CodecStringBuilder` with bidirectional `codecString(for:)`
+  and `parse(_:)` entry points, per IETF RFC 6381, ISO/IEC 14496-15
+  §A.5, Apple HLS Authoring §2.2, DASH-IF Implementation Guidelines
+  §4.
+
+#### Language tags — BCP 47 / RFC 5646 (Session 5)
+
+- `BCP47LanguageTag` with full RFC 5646 §2.1 ABNF parser + §4.5
+  canonicalisation.
+- Companion types — `BCP47Error`, `PrimarySubtag`, `ISO15924Script`,
+  `Region`, `BCP47Extension`.
+- `IANALanguageSubtagRegistry` — embedded 2026-05 snapshot (ISO
+  639-1, ISO 639-3, /B↔/T mapping, ISO 15924, ISO 3166-1, UN M.49,
+  grandfathered, extended-language subtags).
+- ISO 639-2/T bridge — `BCP47LanguageTag.fromISO6392T(_:)` +
+  `toISO6392T()` with /B disambiguation and shortest-form preference.
+- RFC 4647 matching — `.basic`, `.extended`, `.lookup` schemes with
+  wildcard support.
+- `MediaHeaderBox.languageAsBCP47()`,
+  `CMAFTrackConfiguration.bcp47Language`,
+  `SubtitleFields.bcp47Language` — additive typed accessors.
+
+#### Accessibility primitives (Session 5.5 — insertion session)
+
+- `MediaSelectionRole` (16-case enum capturing track purpose).
+- `AccessibilityFeature` (16-case enum capturing accessibility need).
+- `AccessibilityCharacteristic` (7 typed Apple URIs + `.custom`).
+- `AudioPurpose` (DVB TVA AudioPurposeCS:2007 codes 0..7).
+- `AccessibilityMetadata` aggregate with `allHLSCharacteristicURIs`,
+  `canonicalDASHRoleValue`, and `carriesEUAccessibilityActFeature`
+  derived getters.
+- `AccessibilityError` typed errors.
+- `CMAFTrackConfiguration.accessibility` +
+  `SubtitleFields.accessibility` — additive storage (default `nil`
+  preserves v0.1.0 back-compat).
+- Standards: Apple HLS Authoring §4.6, ISO/IEC 23009-1
+  §5.8.4-§5.8.5.5, DASH-IF IOP v5.0+ §6.6, DVB-DASH (ETSI TS 103
+  285) §5.2, ETSI EN 301 549 §7.1, EU Directive 2019/882, W3C
+  Media Accessibility User Requirements, FCC §79.4, CTA-2065, EBU
+  Tech 3370.
+
+#### Audio codecs (Session 6)
+
+- `EC3JOCExtension` (5-case typed enum) +
+  `EC3SpecificBox.jocExtension` + `EC3SpecificBox.carriesDolbyAtmos`
+  — first-class Dolby Atmos detection in E-AC-3 streams per ETSI TS
+  102 366 Annex H.
+- `ALACSampleEntry` (`alac`) + `ALACSpecificBox` — Apple Lossless
+  audio per Apple ALAC public specification.
+- `PCMConfigurationBox` (`pcmC`) + `PCMSampleCodecKind` per ISO/IEC
+  23003-5 §5.
+- `IntegerPCMSampleEntry` (`ipcm`), `FloatingPointPCMSampleEntry`
+  (`fpcm`), `LegacyPCMSampleEntry` (`lpcm`) — CMAF uncompressed
+  audio sample entries per ISO/IEC 23003-5 §4 + ISO/IEC 14496-12
+  §12.2.3.
+- `AudioCodec.alac`, `.ipcm`, `.fpcm`, `.lpcm` cases.
+- `AudioCodecConfiguration.alac`, `.integerPCM`, `.floatingPointPCM`,
+  `.legacyPCM` cases.
+- CMAF brands `cup1` / `cup2` per CMAF §7.5.2 (compatibility brands
+  for the uncompressed-audio profile).
+
+#### Validators (Session 7)
+
+- `ISOConformanceValidator` — generic ISO BMFF structural validator
+  with 8 rules (I1-I8) per ISO/IEC 14496-12 §4-§8.
+- `CENCConformanceValidator` — generic Common Encryption validator
+  with 8 rules (C1-C8) per ISO/IEC 23001-7 §4.5-§4.9.
+- `ISOConformanceLevel` / `ISOConformanceRule` /
+  `ISOConformanceIssue` / `ISOConformanceReport`.
+- `CENCConformanceLevel` / `CENCConformanceRule` /
+  `CENCConformanceIssue` / `CENCConformanceReport`.
+- `CMAFConformanceValidator.isoValidator` +
+  `CMAFConformanceValidator.cencValidator` — additive composition
+  accessors (the existing CMAF validator's parsed-segment logic is
+  unchanged).
+
+### Documentation
+
+- Six new DocC articles: `MVHEVCGuide`, `CodecStringReference`,
+  `LanguageTagsReference`, `AccessibilityReference`,
+  `AudioCodecsReference`, `ValidatorsHierarchy`.
+- Landing `CMAFKit.md` Topics extended with 0.1.1 surface sections.
+- `Architecture.md` updated with new `Media/Languages/` and
+  `Media/Accessibility/` submodules + composition references.
+- `StandardsReference.md` extended with 0.1.1 standards (~28 new
+  spec covers added).
+- `README.md` — "What's new in 0.1.1" section.
+
+### Changed
+
+- (purely additive — no breaking changes on the v0.1.0 surface)
+
+### Deprecated
+
+- (none)
 
 ### Removed
 
-- (Session 1) Three placeholder modules `Sources/CMAFKit/CodecBitstream/`, `Sources/CMAFKit/CodecSampleEntries/`, `Sources/CMAFKit/CMAFProfiles/` (inert `_*Placeholder.swift` files, zero public surface — content was relocated during 0.1.0 implementation to flatter locations).
+- (Session 1) Three placeholder modules
+  `Sources/CMAFKit/CodecBitstream/`, `Sources/CMAFKit/CodecSampleEntries/`,
+  `Sources/CMAFKit/CMAFProfiles/` (inert `_*Placeholder.swift`
+  files, zero public surface — content was relocated during 0.1.0
+  implementation to flatter locations).
+
+### Fixed
+
+- (no behavioural fixes — patch is pure addition; existing v0.1.0
+  behaviour preserved byte-identically)
+
+### Security
+
+- (none — no security fixes)
 
 ### Notes
 
-- 19 new standards covered (cumulative total: 45+, vs 26 in 0.1.0).
-- Test count: +~250 tests (cumulative ~3 150 from 2 896 in 0.1.0).
-- Zero breaking change on the v0.1.0 public surface.
-- Zero forbidden patterns.
-- All 7 Apple targets build clean (macOS native, Mac Catalyst, iOS, iPadOS, tvOS, watchOS, visionOS); Linux builds clean with `canImport(AVFoundation)`-guarded fixtures only.
+- ~28 new standards covered (cumulative total ~73, vs 45 in 0.1.0).
+- Test count: +656 across the 8 implementation sessions (2 896 in
+  0.1.0 → 3 552 at the end of Session 7).
+- Coverage ≥ 92 % global maintained across every session.
+- Zero forbidden patterns introduced.
+- All Apple targets build clean (macOS native, Mac Catalyst, iOS,
+  iPadOS, tvOS, watchOS, visionOS); Linux builds clean with
+  `canImport(AVFoundation)`-guarded fixtures only.
 
 ## [0.1.0] — 2026-05-23
 

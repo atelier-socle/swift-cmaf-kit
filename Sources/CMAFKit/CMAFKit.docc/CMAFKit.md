@@ -55,9 +55,12 @@ streaming ecosystem.
 - ``CMAFConformanceValidator``
 - ``DASHConformanceValidator``
 - ``LLHLSConformanceValidator``
+- ``ISOConformanceValidator``
+- ``CENCConformanceValidator``
 - ``CMAFValidationReport``
 - ``CMAFValidationIssue``
 - <doc:ConformanceValidators>
+- <doc:ValidatorsHierarchy>
 
 ### Encryption
 
@@ -77,6 +80,58 @@ streaming ecosystem.
 - ``CCService``
 - ``ClosedCaptionExtractor``
 - <doc:ClosedCaptions>
+
+### Multi-view HEVC and Apple Vision Pro
+
+- ``HEVCParameterSets``
+- ``HEVCVPSExtension``
+- ``HEVCMultiLayerSPS``
+- ``MultiLayerHEVCConfiguration``
+- ``MVHEVCSampleEntry``
+- ``MVHEVCPackager``
+- ``ViewExtendedUsageBox``
+- ``StereoInformationBox``
+- ``HeroEyeInformationBox``
+- <doc:MVHEVCGuide>
+
+### Codec strings (RFC 6381)
+
+- ``RFC6381CodecDescriptor``
+- ``RFC6381CodecStringBuilder``
+- <doc:CodecStringReference>
+
+### Language tags (BCP 47)
+
+- ``BCP47LanguageTag``
+- ``PrimarySubtag``
+- ``ISO15924Script``
+- ``Region``
+- ``BCP47Extension``
+- ``IANALanguageSubtagRegistry``
+- ``BCP47Error``
+- <doc:LanguageTagsReference>
+
+### Accessibility primitives (HLS / DASH cross-format)
+
+- ``MediaSelectionRole``
+- ``AccessibilityFeature``
+- ``AccessibilityCharacteristic``
+- ``AudioPurpose``
+- ``AccessibilityMetadata``
+- ``AccessibilityError``
+- <doc:AccessibilityReference>
+
+### Audio codecs (Atmos / ALAC / PCM)
+
+- ``EC3JOCExtension``
+- ``ALACSampleEntry``
+- ``ALACSpecificBox``
+- ``PCMConfigurationBox``
+- ``PCMSampleCodecKind``
+- ``IntegerPCMSampleEntry``
+- ``FloatingPointPCMSampleEntry``
+- ``LegacyPCMSampleEntry``
+- <doc:AudioCodecsReference>
 
 ### Accessibility & standards
 
