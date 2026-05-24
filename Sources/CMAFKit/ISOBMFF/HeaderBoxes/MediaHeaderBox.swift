@@ -107,3 +107,27 @@ public struct MediaHeaderBox: ISOFullBox, Sendable, Equatable {
         }
     }
 }
+
+extension MediaHeaderBox {
+
+    /// Decode the 3-byte ISO 639-2/T language packed into the `mdhd`
+    /// box as a typed BCP 47 tag.
+    ///
+    /// The `mdhd` box stores language as 3 × 5-bit packed ISO 639-2/T
+    /// per ISO/IEC 14496-12 §8.4.2.3. The existing ``language`` field
+    /// decodes the 3-char string; this method bridges it to a typed
+    /// ``BCP47LanguageTag`` via ``BCP47LanguageTag/fromISO6392T(_:)``,
+    /// including the /B → /T disambiguation if the encoder wrote a
+    /// Bibliographic variant.
+    ///
+    /// - Throws: ``BCP47Error/unknownISO6392Code(_:)`` if the stored
+    ///   language string is not a syntactically valid 3-char ISO 639-2
+    ///   code (e.g., padded bytes from a malformed encoder).
+    ///
+    /// References:
+    /// - ISO/IEC 14496-12 §8.4.2.3 — Media Header Box `mdhd` language
+    /// - IETF RFC 5646 — Tags for Identifying Languages
+    public func languageAsBCP47() throws -> BCP47LanguageTag {
+        try BCP47LanguageTag.fromISO6392T(language)
+    }
+}

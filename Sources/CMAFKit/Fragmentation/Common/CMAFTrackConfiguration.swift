@@ -210,3 +210,46 @@ public struct CMAFTrackConfiguration: Sendable, Equatable {
         }
     }
 }
+
+extension CMAFTrackConfiguration {
+
+    /// Typed BCP 47 view over the ``language`` field.
+    ///
+    /// Returns `nil` when the underlying string is empty, equal to
+    /// `"und"` (undetermined per ISO 639-2 §3.1), or fails to parse as
+    /// ISO 639-2. The non-throwing semantics make this safe for use in
+    /// HLS variant playlist generation and DASH MPD `@lang` attribute
+    /// generation where a parse failure should silently degrade rather
+    /// than crash.
+    ///
+    /// For callers that need explicit error handling, use
+    /// ``BCP47LanguageTag/fromISO6392T(_:)`` directly on ``language``.
+    ///
+    /// References:
+    /// - IETF RFC 5646 — Tags for Identifying Languages
+    /// - ISO 639-2 — Alpha-3 code (special-purpose code `und`)
+    /// - ISO/IEC 14496-12 §8.4.2.3 — Media Header Box
+    public var bcp47Language: BCP47LanguageTag? {
+        Self.bcp47Tag(from: language)
+    }
+
+    fileprivate static func bcp47Tag(from raw: String) -> BCP47LanguageTag? {
+        guard !raw.isEmpty, raw.lowercased() != "und" else { return nil }
+        return try? BCP47LanguageTag.fromISO6392T(raw)
+    }
+}
+
+extension CMAFTrackConfiguration.SubtitleFields {
+
+    /// Typed BCP 47 view over the subtitle stream's own ``language``
+    /// field. Returns `nil` on empty / `"und"` / parse failure
+    /// (silent-degrade semantics — same rationale as
+    /// ``CMAFTrackConfiguration/bcp47Language``).
+    ///
+    /// References:
+    /// - IETF RFC 5646
+    /// - ISO 639-2
+    public var bcp47Language: BCP47LanguageTag? {
+        CMAFTrackConfiguration.bcp47Tag(from: language)
+    }
+}
