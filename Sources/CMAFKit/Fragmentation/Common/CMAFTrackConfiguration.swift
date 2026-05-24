@@ -48,6 +48,12 @@ public struct CMAFTrackConfiguration: Sendable, Equatable {
     public let encryptionParameters: CMAFEncryptionParameters?
     /// Default per-sample flags emitted in `trex`.
     public let defaultSampleFlags: SampleFlags
+    /// Typed accessibility metadata for the track. Defaults to `nil`
+    /// — tracks without accessibility signalling behave identically
+    /// to v0.1.0. HLSKit consumes this for `EXT-X-MEDIA` attribute
+    /// emission; DASHKit consumes this for `<Role>` / `<Accessibility>`
+    /// descriptor emission. See ``AccessibilityMetadata``.
+    public let accessibility: AccessibilityMetadata?
 
     public init(
         trackID: UInt32,
@@ -61,7 +67,8 @@ public struct CMAFTrackConfiguration: Sendable, Equatable {
         metadataFields: MetadataFields? = nil,
         editList: EditListBox? = nil,
         encryptionParameters: CMAFEncryptionParameters? = nil,
-        defaultSampleFlags: SampleFlags = SampleFlags()
+        defaultSampleFlags: SampleFlags = SampleFlags(),
+        accessibility: AccessibilityMetadata? = nil
     ) {
         self.trackID = trackID
         self.kind = kind
@@ -75,6 +82,7 @@ public struct CMAFTrackConfiguration: Sendable, Equatable {
         self.editList = editList
         self.encryptionParameters = encryptionParameters
         self.defaultSampleFlags = defaultSampleFlags
+        self.accessibility = accessibility
     }
 
     /// Video-track fields. Carries everything required by the sample
@@ -190,10 +198,19 @@ public struct CMAFTrackConfiguration: Sendable, Equatable {
         /// May differ from the track-level ``language`` (e.g., a
         /// French audio track with English subtitles).
         public let language: String
+        /// Typed accessibility metadata for the subtitle stream
+        /// itself (distinct from the parent track's accessibility).
+        /// Defaults to `nil` — back-compat with v0.1.0.
+        public let accessibility: AccessibilityMetadata?
 
-        public init(codec: SubtitleCodec, language: String) {
+        public init(
+            codec: SubtitleCodec,
+            language: String,
+            accessibility: AccessibilityMetadata? = nil
+        ) {
             self.codec = codec
             self.language = language
+            self.accessibility = accessibility
         }
     }
 
