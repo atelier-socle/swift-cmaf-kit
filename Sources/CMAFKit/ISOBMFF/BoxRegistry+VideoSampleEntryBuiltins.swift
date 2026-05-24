@@ -7,7 +7,9 @@
 //   • 11 video sample entries: avc1, avc3, hvc1, hev1, dvh1, dvhe,
 //                              vp08, vp09, av01, mp4v, encv
 //   • 5 configuration records: avcC, hvcC, vpcC, av1C, esds
-//   • 3 extension boxes:       pasp, clap, btrt
+//   • 6 extension boxes:       pasp, clap, btrt, vexu, stri, hero
+//                              (vexu/stri/hero are Apple HEVC Stereo
+//                              Video Profile additions for visionOS)
 
 import Foundation
 
@@ -86,6 +88,16 @@ extension BoxRegistry {
         }
         register(BitRateBox.self) { reader, header, registry in
             try await BitRateBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        // Apple HEVC Stereo Video Profile boxes (visionOS Spatial Video).
+        register(ViewExtendedUsageBox.self) { reader, header, registry in
+            try await ViewExtendedUsageBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(StereoInformationBox.self) { reader, header, registry in
+            try await StereoInformationBox.parse(reader: &reader, header: header, registry: registry)
+        }
+        register(HeroEyeInformationBox.self) { reader, header, registry in
+            try await HeroEyeInformationBox.parse(reader: &reader, header: header, registry: registry)
         }
     }
 }
