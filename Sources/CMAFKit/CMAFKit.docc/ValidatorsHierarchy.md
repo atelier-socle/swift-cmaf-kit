@@ -78,6 +78,69 @@ real-world player tolerance).
 Findings are ``ISOConformanceIssue`` aggregated in an
 ``ISOConformanceReport``.
 
+Validating a minimal CMAF-shaped `ftyp` against the box-array
+overload:
+
+```swift
+import CMAFKit
+
+let ftyp = FileTypeBox(
+    majorBrand: "cmfc",
+    minorVersion: 0,
+    compatibleBrands: ["iso6", "cmfc"]
+)
+let validator = ISOConformanceValidator()
+let report = validator.validate(rootBoxes: [ftyp])
+// report.issues(for: .I1_FileTypePresent).isEmpty == true
+```
+
+Picking up the same input from raw bytes or a file uses the async
+overloads — both round-trip through the default ``BoxRegistry``
+parser:
+
+```swift
+import Foundation
+import CMAFKit
+
+let data: Data = ...  // an init segment loaded from disk or HTTP
+let dataReport = try await ISOConformanceValidator().validate(data: data)
+
+let fileURL: URL = URL(fileURLWithPath: "/tmp/init.mp4")
+let fileReport = try await ISOConformanceValidator().validate(fileURL: fileURL)
+```
+
+### Report inspection
+
+``ISOConformanceReport/isConformant`` returns `true` iff no issue
+carries the ``ISOConformanceIssue/Severity/error`` severity; SHOULD
+violations are recorded as warnings and do not flip the flag.
+``ISOConformanceReport/issues(of:)`` filters by severity;
+``ISOConformanceReport/issues(for:)`` filters by typed rule:
+
+```swift
+import CMAFKit
+
+let report = ISOConformanceValidator().validate(rootBoxes: [])
+let errors = report.issues(of: .error)
+let i1Issues = report.issues(for: .I1_FileTypePresent)
+// errors.contains where .rule == .I1_FileTypePresent
+// !report.isConformant
+```
+
+### Per-rule check
+
+Every rule is queryable individually — useful when emitting
+per-section diagnostics or scoring partial conformance. Triggering
+the I1 rule by passing an empty box list (no `ftyp`):
+
+```swift
+import CMAFKit
+
+let report = ISOConformanceValidator().validate(rootBoxes: [])
+let i1 = report.issues(for: .I1_FileTypePresent)
+// i1.contains { $0.severity == .error }
+```
+
 ### ``CENCConformanceValidator``
 
 Generic Common Encryption conformance validator per ISO/IEC 23001-7
@@ -97,6 +160,36 @@ Generic Common Encryption conformance validator per ISO/IEC 23001-7
 Plus the ``CENCConformanceValidator/detectsCENCProtection(in:)``
 helper to short-circuit clear (non-DRM) files.
 
+Short-circuiting unencrypted inputs before running the full CENC
+rule pipeline:
+
+```swift
+import CMAFKit
+
+let rootBoxes: [any ISOBox] = ...  // parsed top-level boxes
+let cencValidator = CENCConformanceValidator()
+
+guard cencValidator.detectsCENCProtection(in: rootBoxes) else {
+    // Clear content — no CENC rules apply.
+    return
+}
+let report = cencValidator.validate(rootBoxes: rootBoxes)
+```
+
+Querying specific CENC rules — for example, verifying that every
+encrypted sample entry carries its ``ProtectionSchemeInfoBox``
+(`sinf`) per C1 / C3 / C4:
+
+```swift
+import CMAFKit
+
+let report = CENCConformanceValidator().validate(rootBoxes: rootBoxes)
+let c1 = report.issues(for: .C1_EncryptedSampleEntryHasSinf)
+let c3 = report.issues(for: .C3_SinfHasValidSchm)
+let c4 = report.issues(for: .C4_SchiHasTenc)
+// Each list is empty on a conformant input.
+```
+
 ## Composition
 
 ``CMAFConformanceValidator/isoValidator`` and
@@ -106,6 +199,20 @@ logic is unchanged. Callers needing standalone box-array validation
 (HLSKit init-segment structural check, CMAFKitDRM provider
 verification) can use the box-array validators directly without
 constructing a parsed CMAF presentation.
+
+```swift
+import CMAFKit
+
+let cmaf = CMAFConformanceValidator()
+
+// Box-array layer reachable from the CMAF validator:
+let isoReport = cmaf.isoValidator.validate(rootBoxes: rootBoxes)
+let cencReport = cmaf.cencValidator.validate(rootBoxes: rootBoxes)
+
+// Or instantiate the box-array validators directly — same surface:
+let iso = ISOConformanceValidator()
+let cenc = CENCConformanceValidator()
+```
 
 ## Standards covered
 
