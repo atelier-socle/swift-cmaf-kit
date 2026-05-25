@@ -52,10 +52,20 @@ fi
 echo "✓ Test count: $TESTS_NOW (≥ $BASELINE_TESTS v0.1.1 baseline)"
 
 # 3. No public symbol removed since the v0.1.1 baseline tag.
+#
+# Known intentional rename (Session 1 — Foundation, 0.1.2):
+#   `public struct CMAFKitCLI: AsyncParsableCommand` (in CMAFKitCLI executable target)
+#   → renamed to `public struct CMAFKitCommand: AsyncParsableCommand` (in CMAFKitCommands library target).
+# The `CMAFKitCLI` name survives as the executable's `internal @main` wrapper.
+# This rename is binary-safe: the `CMAFKitCLI` executable target is not
+# importable by third-party packages (Swift forbids importing an
+# executable target). The rename is documented in CHANGELOG [Unreleased]
+# under Changed/Removed. We allow-list the exact removed signature here.
 if git rev-parse --verify "$BASELINE_TAG" >/dev/null 2>&1; then
     REMOVED=$(git diff "$BASELINE_TAG"..HEAD -- 'Sources/CMAFKit/' 'Sources/CMAFKitDRM/' 'Sources/CMAFKitCLI/' 'Sources/CMAFKitCommands/' 2>/dev/null \
         | grep -E '^-public ' \
         | grep -v '^---' \
+        | grep -v '^-public struct CMAFKitCLI: AsyncParsableCommand' \
         || true)
     if [ -n "$REMOVED" ]; then
         echo "✗ FAIL: public symbol(s) removed since $BASELINE_TAG:"

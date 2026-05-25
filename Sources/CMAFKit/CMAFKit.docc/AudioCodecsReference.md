@@ -34,6 +34,31 @@ signalling. The ``RFC6381CodecStringBuilder`` reads
 `carriesDolbyAtmos` to set the `joc: Bool` on the descriptor. See
 <doc:CodecStringReference>.
 
+Detecting Atmos on a parsed ``EC3SpecificBox`` and gating the
+manifest signalling on it:
+
+```swift
+import CMAFKit
+
+let dec3 = EC3SpecificBox(
+    dataRate: 768,
+    independentSubstreams: [
+        EC3SpecificBox.IndependentSubstream(
+            fscod: .freq48000,
+            bsid: 16,
+            asvc: false,
+            bsmod: .completeMain,
+            acmod: .threeTwo,
+            lfeon: true,
+            dependentSubstreamCount: 0
+        )
+    ],
+    ec3ExtensionTypeA: 0x10  // bedAndObjects, complexity 16 — Apple canonical
+)
+// dec3.jocExtension == .bedAndObjects(complexityIndex: 16)
+// dec3.carriesDolbyAtmos == true
+```
+
 ## Apple Lossless (ALAC)
 
 The Apple ALAC public specification (open-sourced 2011) defines a
@@ -51,6 +76,44 @@ The Apple ALAC public specification (open-sourced 2011) defines a
 - ``ALACSampleEntry`` — the `alac` sample entry box combining the
   standard ``AudioSampleEntryFields`` + the magic cookie + the
   ``AudioSampleEntryExtensions`` (`chnl` / `srat` / `btrt`).
+
+Constructing a typical stereo 24-bit / 96 kHz cookie:
+
+```swift
+import CMAFKit
+
+let alac = ALACSpecificBox(
+    bitDepth: 24,
+    numChannels: 2,
+    maxFrameBytes: 8_192,
+    avgBitRate: 1_536_000,
+    sampleRate: 96_000
+)
+```
+
+The defaults match the public Apple ALAC specification —
+`frameLength: 4096`, `compatibleVersion: 0`, `pb: 40`, `mb: 10`,
+`kb: 14`, `maxRun: 0xFF`.
+
+``ALACSpecificBox/validate()`` enforces the spec constraints
+(bit depth ∈ {16, 20, 24, 32}, channel count ∈ 1..8, compatible
+version zero, sample rate non-zero). Throws a typed
+``ALACSpecificBoxError`` on rejection:
+
+```swift
+import CMAFKit
+
+for bitDepth: UInt8 in [16, 20, 24, 32] {
+    let box = ALACSpecificBox(
+        bitDepth: bitDepth,
+        numChannels: 2,
+        maxFrameBytes: 4096,
+        avgBitRate: 0,
+        sampleRate: 44_100
+    )
+    try box.validate()
+}
+```
 
 ### fourCC collision resolution
 
@@ -77,11 +140,82 @@ per-codec bit-depth constraints — rejects 64-bit on integer entries,
 rejects 16-bit on float entries (IEEE 754 binary16 is not a
 CMAF-standard form).
 
+Building a big-endian 24-bit ``PCMConfigurationBox``:
+
+```swift
+import CMAFKit
+
+let pcmC = PCMConfigurationBox(
+    endianness: .bigEndian,
+    pcmSampleSize: 24
+)
+```
+
+A stereo 16-bit / 48 kHz little-endian ``IntegerPCMSampleEntry``
+(`ipcm`):
+
+```swift
+import CMAFKit
+
+let ipcm = IntegerPCMSampleEntry(
+    audioFields: AudioSampleEntryFields(
+        channelCount: 2,
+        sampleSize: 16,
+        sampleRate: 48_000 << 16  // 16.16 fixed-point
+    ),
+    pcmConfiguration: PCMConfigurationBox(
+        endianness: .littleEndian,
+        pcmSampleSize: 16
+    )
+)
+```
+
+A stereo 32-bit IEEE 754 ``FloatingPointPCMSampleEntry`` (`fpcm`)
+mirrors the same shape with `pcmSampleSize: 32`:
+
+```swift
+import CMAFKit
+
+let fpcm = FloatingPointPCMSampleEntry(
+    audioFields: AudioSampleEntryFields(
+        channelCount: 2,
+        sampleSize: 32,
+        sampleRate: 48_000 << 16
+    ),
+    pcmConfiguration: PCMConfigurationBox(
+        endianness: .littleEndian,
+        pcmSampleSize: 32
+    )
+)
+```
+
 ``LegacyPCMSampleEntry`` (`lpcm`) per ISO/IEC 14496-12 §12.2.3 +
 §12.2.3.2 uses the version 1 ``AudioSampleEntryFields`` with the
 QuickTime-legacy V1 fields inline (`outChannelCount`,
 `outSampleSize`, `outSampleRate`, `constBytesPerAudioSample`,
 `samplesPerFrame`). No separate config box.
+
+A stereo 16-bit / 44.1 kHz `lpcm` entry:
+
+```swift
+import CMAFKit
+
+let lpcm = LegacyPCMSampleEntry(
+    audioFields: AudioSampleEntryFields(
+        version: .v1,
+        channelCount: 2,
+        sampleSize: 16,
+        sampleRate: 44_100 << 16,
+        v1Fields: AudioSampleEntryFields.V1Fields(
+            outChannelCount: 2,
+            outSampleSize: 16,
+            outSampleRate: 44_100,
+            constBytesPerAudioSample: 2,
+            samplesPerFrame: 1
+        )
+    )
+)
+```
 
 > Out of scope for 0.1.1: `sowt` (signed-int 16-bit little-endian)
 > and `twos` (signed-int 16-bit big-endian) — QuickTime-only legacy

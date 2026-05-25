@@ -98,14 +98,124 @@ defaulting to `nil` — back-compat with v0.1.0).
 
 ## Real-world fixtures
 
-The test suite exercises a Netflix-style audio description
-(`role: .description`, features `[.audioDescription]`, audio purpose
-`.audioDescription`), a BBC iPlayer closed-captions track (role
-`.captions`, characteristics for both speech and ambient sound),
-Disney+ forced subtitles, ARD/ZDF German sign-language interpretation
-with the regional sign-language tag (`gsg`), France-TV LSF (`fsl`),
-American Sign Language (`ase`), and the empty Apple Spatial Video
-stereo audio case.
+The test suite exercises canonical broadcaster fixtures end-to-end.
+Each `AccessibilityMetadata` value below corresponds to a typed
+`@Test` in the audited surface — the same values your manifest
+emitter will produce for the equivalent input track.
+
+### BBC iPlayer closed captions (en-GB)
+
+Closed captions with both speech transcription and ambient-sound
+description per BBC Subtitle Guidelines:
+
+```swift
+import CMAFKit
+
+let bbcCaptions = AccessibilityMetadata(
+    role: .captions,
+    features: [.closedCaptions],
+    characteristics: [.transcribesSpokenDialog, .describesMusicAndSound],
+    isAutoSelect: true,
+    associatedLanguage: try BCP47LanguageTag("en-GB")
+)
+// bbcCaptions.canonicalDASHRoleValue == "caption"
+// bbcCaptions.carriesEUAccessibilityActFeature == true
+```
+
+### ARD / ZDF German Sign Language (gsg)
+
+German Sign Language interpretation track — note the ISO 639-3
+`gsg` (Deutsche Gebärdensprache) carried via the typed
+``AccessibilityMetadata/signLanguage`` field:
+
+```swift
+import CMAFKit
+
+let ardSign = AccessibilityMetadata(
+    role: .sign,
+    features: [.signLanguageInterpretation],
+    isAutoSelect: false,
+    signLanguage: try BCP47LanguageTag("gsg")
+)
+// ardSign.canonicalDASHRoleValue == "sign"
+// ardSign.signLanguage?.primaryLanguage == .iso639_3("gsg")
+// ardSign.carriesEUAccessibilityActFeature == true
+```
+
+### France-TV French Sign Language (fsl)
+
+LSF (Langue des Signes Française) carried with the same shape — the
+sign-language tag distinguishes the regional variant for downstream
+player selection:
+
+```swift
+import CMAFKit
+
+let franceTVLSF = AccessibilityMetadata(
+    role: .sign,
+    features: [.signLanguageInterpretation],
+    signLanguage: try BCP47LanguageTag("fsl")
+)
+// franceTVLSF.signLanguage?.primaryLanguage == .iso639_3("fsl")
+// franceTVLSF.carriesEUAccessibilityActFeature == true
+```
+
+### Disney+ forced subtitles
+
+Forced subtitles cover foreign-language sections of an otherwise
+single-language film. They are *not* an accessibility feature — the
+helper correctly returns `false`:
+
+```swift
+import CMAFKit
+
+let disneyForced = AccessibilityMetadata(
+    role: .forcedSubtitle,
+    features: [.forcedSubtitles],
+    isForced: true,
+    associatedLanguage: try BCP47LanguageTag("en")
+)
+// disneyForced.canonicalDASHRoleValue == "forced-subtitle"
+// disneyForced.isForced == true
+// disneyForced.carriesEUAccessibilityActFeature == false
+```
+
+## DASH role mapping
+
+``AccessibilityMetadata/canonicalDASHRoleValue`` emits the typed
+``MediaSelectionRole``'s DASH `Role` scheme value — useful when an
+HLS-shaped pipeline branches into a DASH manifest emitter:
+
+```swift
+import CMAFKit
+
+let metadata = AccessibilityMetadata(role: .captions)
+// metadata.canonicalDASHRoleValue == "caption"
+```
+
+The 16-case ``MediaSelectionRole`` round-trips through
+``MediaSelectionRole/fromDASHRoleValue(_:)``; `.transcript` returns
+`nil` because it ships via the DASH `Accessibility` descriptor, not
+`Role`.
+
+## DVB-DASH AudioPurpose emission
+
+``AudioPurpose`` carries the DVB-DASH TVA AudioPurposeCS:2007 codes
+0..7. ``AudioPurpose/dashSchemeValue`` produces the canonical
+single-digit string for the `<Accessibility>` descriptor:
+
+```swift
+import CMAFKit
+
+let metadata = AccessibilityMetadata(
+    role: .description,
+    features: [.audioDescription],
+    audioPurpose: .audioDescription,
+    isAutoSelect: true,
+    associatedLanguage: try BCP47LanguageTag("en-US")
+)
+// metadata.audioPurpose?.dashSchemeValue == "1"
+```
 
 ## EU Accessibility Act compliance
 
@@ -114,7 +224,17 @@ stereo audio case.
 (`features` or `role`), extended audio description, closed captions,
 sign language interpretation, captions role, sign role, description
 role. This is the single helper a manifest validator queries to
-detect EU §I compliance gaps.
+detect EU §I compliance gaps:
+
+```swift
+import CMAFKit
+
+let audioDescription = AccessibilityMetadata(features: [.audioDescription])
+// audioDescription.carriesEUAccessibilityActFeature == true
+
+let plainStereo = AccessibilityMetadata.empty
+// plainStereo.carriesEUAccessibilityActFeature == false
+```
 
 ## Standards covered
 

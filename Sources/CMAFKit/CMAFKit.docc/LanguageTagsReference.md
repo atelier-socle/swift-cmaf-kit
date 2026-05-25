@@ -100,6 +100,76 @@ syntactic `isWellFormedXXX(_:)` ABNF check. The default parser uses
 the syntax check (permissive mode); strict-mode registry validation
 is reserved for a follow-up.
 
+Probing the registry directly — useful when an external system
+hands you a code and you want to gate it before constructing a
+``BCP47LanguageTag``:
+
+```swift
+import CMAFKit
+
+// ISO 639-3 codes (3-letter terminologic) — sign languages, minority
+// languages, and any code not also in ISO 639-1 live here:
+let frenchKnown = IANALanguageSubtagRegistry.isKnownISO639_3("fra")  // true
+let cantoneseKnown = IANALanguageSubtagRegistry.isKnownISO639_3("YUE")  // true
+let madeUpKnown = IANALanguageSubtagRegistry.isKnownISO639_3("zzz")  // false
+```
+
+## Error paths
+
+Malformed input throws a typed ``BCP47Error``. The error carries the
+offending input and a human-readable reason so callers can surface a
+useful diagnostic without re-parsing:
+
+```swift
+import CMAFKit
+
+do {
+    _ = try BCP47LanguageTag("")
+} catch let error as BCP47Error {
+    // error == .malformedTag(input: "", reason: "…")
+}
+```
+
+Other typed cases include ``BCP47Error/unknownPrimarySubtag(_:)``,
+``BCP47Error/unknownScript(_:)``, ``BCP47Error/unknownRegion(_:)``,
+``BCP47Error/ambiguousISO6392B(_:candidates:)``, and
+``BCP47Error/unknownISO6392Code(_:)`` — every category of failure has
+its own case, no `.invalid(reason: String)` catch-all.
+
+## Grandfathered tags
+
+The RFC 5646 §2.2.8 grandfathered tag list (e.g., `i-default`,
+`art-lojban`, `zh-min-nan`) is recognised verbatim — the parser
+short-circuits ABNF rules and assigns them to the
+``PrimarySubtag/grandfathered(_:)`` case:
+
+```swift
+import CMAFKit
+
+let tag = try BCP47LanguageTag("i-default")
+// tag.primaryLanguage == .grandfathered("i-default")
+// tag.canonicalForm == "i-default"
+```
+
+## Codable round-trip
+
+``BCP47LanguageTag`` is `Codable` and serialises to its canonical
+string form, so JSON / Plist round-trips preserve identity even
+through case- or order-normalisation:
+
+```swift
+import Foundation
+import CMAFKit
+
+let tag = try BCP47LanguageTag("pt-BR")
+let data = try JSONEncoder().encode(tag)
+let decoded = try JSONDecoder().decode(BCP47LanguageTag.self, from: data)
+// decoded == tag
+```
+
+Extension subtags survive the round-trip too — `de-DE-u-co-phonebk`
+keeps the `u-co-phonebk` ``BCP47Extension`` on the decoded value.
+
 ## Standards covered
 
 - **IETF RFC 5646 / BCP 47** — Tags for Identifying Languages
