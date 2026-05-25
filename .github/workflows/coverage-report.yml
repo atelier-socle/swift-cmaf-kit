@@ -49,7 +49,7 @@ jobs:
             "${{ steps.cov.outputs.xctest }}/Contents/MacOS/$(basename "${{ steps.cov.outputs.xctest }}" .xctest)" \
             -instr-profile="${{ steps.cov.outputs.profdata }}" \
             -format=lcov \
-            -ignore-filename-regex='(\.build|Tests|CMAFKitCLI/Commands)' \
+            -ignore-filename-regex='(\.build|Tests|CMAFKitCommands/Commands)' \
             > coverage.lcov
 
       - name: Upload to Codecov

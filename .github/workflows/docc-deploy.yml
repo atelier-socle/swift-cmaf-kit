@@ -3,9 +3,15 @@
 
 # docc-deploy.yml — Deploy DocC documentation to GitHub Pages.
 #
-# Builds and merges the CMAFKit + CMAFKitDRM + CMAFKitCLI catalogs into a
-# single archive, then publishes the static-hosting tree to GitHub Pages
-# at https://atelier-socle.github.io/swift-cmaf-kit/
+# Builds and merges the CMAFKit + CMAFKitDRM + CMAFKitCommands catalogs
+# into a single archive, then publishes the static-hosting tree to
+# GitHub Pages at https://atelier-socle.github.io/swift-cmaf-kit/
+#
+# Note: the CLI documentation lives in the CMAFKitCommands library
+# target since 0.1.2 (the executable target CMAFKitCLI is a thin @main
+# wrapper; the documented surface — root command + subcommands +
+# formatters — was moved into the testable CMAFKitCommands library
+# during the S1 CLI refactor).
 
 name: DocC
 
@@ -59,12 +65,12 @@ jobs:
             --hosting-base-path swift-cmaf-kit \
             --disable-indexing
 
-      - name: Build CMAFKitCLI documentation
+      - name: Build CMAFKitCommands documentation
         run: |
           swift package --allow-writing-to-directory docs \
             generate-documentation \
-            --target CMAFKitCLI \
-            --output-path docs/CMAFKitCLI.doccarchive \
+            --target CMAFKitCommands \
+            --output-path docs/CMAFKitCommands.doccarchive \
             --transform-for-static-hosting \
             --hosting-base-path swift-cmaf-kit \
             --disable-indexing
@@ -75,7 +81,7 @@ jobs:
           xcrun docc merge \
             docs/CMAFKit.doccarchive \
             docs/CMAFKitDRM.doccarchive \
-            docs/CMAFKitCLI.doccarchive \
+            docs/CMAFKitCommands.doccarchive \
             --output-path docs/merged
 
       - name: Add root redirect

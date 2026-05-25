@@ -24,7 +24,7 @@ struct DecryptInitCommandTests {
         let bytes = try CLITestFixtures.avcWithWidevineInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DecryptInitCommand.parse([url.path, "--output", "text"])
+        let command = try await DecryptInitCommand.parse([url.path, "--output", "text"])
         try await command.run()
     }
 
@@ -33,7 +33,7 @@ struct DecryptInitCommandTests {
         let bytes = try CLITestFixtures.avcWithWidevineInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DecryptInitCommand.parse([url.path, "--output", "json"])
+        let command = try await DecryptInitCommand.parse([url.path, "--output", "json"])
         try await command.run()
     }
 
@@ -42,7 +42,7 @@ struct DecryptInitCommandTests {
         let bytes = try CLITestFixtures.avcWithWidevineInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DecryptInitCommand.parse([url.path, "--output", "table"])
+        let command = try await DecryptInitCommand.parse([url.path, "--output", "table"])
         try await command.run()
     }
 
@@ -51,7 +51,7 @@ struct DecryptInitCommandTests {
         let bytes = try CLITestFixtures.avcPlusAACInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DecryptInitCommand.parse([url.path])
+        let command = try await DecryptInitCommand.parse([url.path])
         try await command.run()
     }
 
@@ -59,7 +59,7 @@ struct DecryptInitCommandTests {
     func malformedInputThrowsInvalidInput() async throws {
         let url = try writeTempFile(CLITestFixtures.malformedBytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DecryptInitCommand.parse([url.path])
+        let command = try await DecryptInitCommand.parse([url.path])
         await #expect(throws: CLIError.self) {
             try await command.run()
         }
@@ -67,7 +67,7 @@ struct DecryptInitCommandTests {
 
     @Test
     func missingFileThrowsInputFileUnreadable() async throws {
-        let command = try DecryptInitCommand.parse(["/var/empty/missing-pssh-y.bin"])
+        let command = try await DecryptInitCommand.parse(["/var/empty/missing-pssh-y.bin"])
         await #expect(throws: CLIError.self) {
             try await command.run()
         }

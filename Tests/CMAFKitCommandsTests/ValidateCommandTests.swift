@@ -23,7 +23,7 @@ struct ValidateCommandTests {
         let bytes = try CLITestFixtures.avcPlusAACInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try ValidateCommand.parse(
+        let command = try await ValidateCommand.parse(
             [url.path, "--profile", "cmaf", "--output", "text"]
         )
         try await command.run()
@@ -34,7 +34,7 @@ struct ValidateCommandTests {
         let bytes = try CLITestFixtures.avcPlusAACInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try ValidateCommand.parse(
+        let command = try await ValidateCommand.parse(
             [url.path, "--profile", "dash", "--output", "json"]
         )
         do {
@@ -49,7 +49,7 @@ struct ValidateCommandTests {
         let bytes = try CLITestFixtures.avcPlusAACInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try ValidateCommand.parse(
+        let command = try await ValidateCommand.parse(
             [url.path, "--profile", "llhls", "--output", "text"]
         )
         do {
@@ -63,7 +63,7 @@ struct ValidateCommandTests {
     func malformedInputThrowsInvalidInput() async throws {
         let url = try writeTempFile(CLITestFixtures.malformedBytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try ValidateCommand.parse([url.path])
+        let command = try await ValidateCommand.parse([url.path])
         await #expect(throws: CLIError.self) {
             try await command.run()
         }
@@ -71,7 +71,7 @@ struct ValidateCommandTests {
 
     @Test
     func missingFileThrowsInputFileUnreadable() async throws {
-        let command = try ValidateCommand.parse(["/var/empty/missing-validate.bin"])
+        let command = try await ValidateCommand.parse(["/var/empty/missing-validate.bin"])
         await #expect(throws: CLIError.self) {
             try await command.run()
         }

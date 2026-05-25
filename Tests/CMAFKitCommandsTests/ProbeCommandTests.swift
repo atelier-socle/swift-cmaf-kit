@@ -84,7 +84,7 @@ struct ProbeCommandTests {
         )
         try CLITestFixtures.malformedBytes.write(to: url)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try ProbeCommand.parse([url.path])
+        let command = try await ProbeCommand.parse([url.path])
         await #expect(throws: CLIError.self) {
             try await command.run()
         }
@@ -92,7 +92,7 @@ struct ProbeCommandTests {
 
     @Test
     func probeCommandRejectsMissingFile() async throws {
-        let command = try ProbeCommand.parse(["/var/empty/missing-probe-test.mp4"])
+        let command = try await ProbeCommand.parse(["/var/empty/missing-probe-test.mp4"])
         await #expect(throws: CLIError.self) {
             try await command.run()
         }

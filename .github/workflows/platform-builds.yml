@@ -7,7 +7,9 @@
 # platform using generic simulator destinations so the workflow is not
 # coupled to specific named devices or OS versions. Per addendum F.1, the
 # library schemes are `CMAFKit` and `CMAFKitDRM` (CamelCase); the
-# executable scheme `CMAFKitCLI` is macOS-only and validated in ci.yml.
+# CLI commands library (`CMAFKitCommands`) and the executable scheme
+# (`CMAFKitCLI`, a thin `@main` wrapper since the 0.1.2 refactor) are
+# macOS-only and validated in ci.yml.
 
 name: Platform Builds
 

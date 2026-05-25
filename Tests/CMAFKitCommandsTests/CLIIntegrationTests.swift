@@ -25,6 +25,14 @@ struct CLIIntegrationTests {
     }
 
     @Test
+    func rootCommandInitProducesEmptyInstance() {
+        // ArgumentParser requires `public init()` on every
+        // ParsableCommand. This call ensures the synthesised initialiser
+        // exists and is reachable from the public surface.
+        _ = CMAFKitCommand()
+    }
+
+    @Test
     func probeCommandAbstract() {
         #expect(ProbeCommand.configuration.abstract.contains("metadata"))
     }

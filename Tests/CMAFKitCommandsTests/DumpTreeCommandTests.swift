@@ -23,7 +23,7 @@ struct DumpTreeCommandTests {
         let bytes = try CLITestFixtures.avcPlusAACInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DumpTreeCommand.parse([url.path, "--output", "text"])
+        let command = try await DumpTreeCommand.parse([url.path, "--output", "text"])
         try await command.run()
     }
 
@@ -32,7 +32,7 @@ struct DumpTreeCommandTests {
         let bytes = try CLITestFixtures.avcPlusAACInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DumpTreeCommand.parse(
+        let command = try await DumpTreeCommand.parse(
             [url.path, "--depth", "1", "--output", "text"]
         )
         try await command.run()
@@ -43,7 +43,7 @@ struct DumpTreeCommandTests {
         let bytes = try CLITestFixtures.avcPlusAACInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DumpTreeCommand.parse([url.path, "--output", "json"])
+        let command = try await DumpTreeCommand.parse([url.path, "--output", "json"])
         try await command.run()
     }
 
@@ -52,7 +52,7 @@ struct DumpTreeCommandTests {
         let bytes = try CLITestFixtures.avcPlusAACInitSegment()
         let url = try writeTempFile(bytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DumpTreeCommand.parse([url.path, "--output", "table"])
+        let command = try await DumpTreeCommand.parse([url.path, "--output", "table"])
         try await command.run()
     }
 
@@ -60,7 +60,7 @@ struct DumpTreeCommandTests {
     func malformedInputThrowsInvalidInput() async throws {
         let url = try writeTempFile(CLITestFixtures.malformedBytes)
         defer { try? FileManager.default.removeItem(at: url) }
-        let command = try DumpTreeCommand.parse([url.path])
+        let command = try await DumpTreeCommand.parse([url.path])
         await #expect(throws: CLIError.self) {
             try await command.run()
         }
@@ -68,7 +68,7 @@ struct DumpTreeCommandTests {
 
     @Test
     func missingFileThrowsInputFileUnreadable() async throws {
-        let command = try DumpTreeCommand.parse(["/var/empty/missing-tree-x.bin"])
+        let command = try await DumpTreeCommand.parse(["/var/empty/missing-tree-x.bin"])
         await #expect(throws: CLIError.self) {
             try await command.run()
         }

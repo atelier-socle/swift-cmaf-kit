@@ -51,7 +51,7 @@ internal enum CLITestFixtures {
     static func avcWithWidevineInitSegment() throws -> Data {
         let widevineUUID = KnownDRMSystemID.widevine.uuid
         let kid = Data(repeating: 0xAA, count: 16)
-        let payload: Data = try {
+        let payload: Data = {
             var writer = ProtocolBufferWriter()
             writer.writeBytesField(fieldNumber: 2, value: kid)
             writer.writeVarintField(fieldNumber: 1, value: 1)  // algorithm = AESCTR
