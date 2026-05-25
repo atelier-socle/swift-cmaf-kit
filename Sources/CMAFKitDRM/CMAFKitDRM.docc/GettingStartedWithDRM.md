@@ -65,6 +65,54 @@ decoder. For the closed-spec wrappers
 bytes verbatim — the container layer is preserved even when the
 inner format is closed.
 
+## Error handling
+
+Malformed init data throws a typed ``DRMSystemError`` — useful
+for distinguishing structural problems from provider routing
+failures. The dispatch never silently swallows errors:
+
+```swift
+import CMAFKit
+import CMAFKitDRM
+import Foundation
+
+let pssh: ProtectionSystemSpecificHeaderBox = ...  // malformed FairPlay
+do {
+    _ = try pssh.typedInitData()
+} catch let error as DRMSystemError {
+    // routed to the typed FairPlay parser; surfaced an error
+    print("DRM parse failed: \(error)")
+}
+```
+
+## Forward-compat for unknown system IDs
+
+Any UUID that isn't one of the nine published systems falls
+through to ``TypedDRMInitData/unknown(systemID:rawBytes:)`` — the
+init data is preserved verbatim, so the calling code can store it,
+forward it across the wire, or route it to an external provider
+plugin without losing fidelity:
+
+```swift
+import CMAFKit
+import CMAFKitDRM
+import Foundation
+
+let novelSystem = UUID(uuidString: "12345678-9ABC-DEF0-1234-567890ABCDEF")!
+let pssh = ProtectionSystemSpecificHeaderBox(
+    version: 1,
+    systemID: novelSystem,
+    keyIdentifiers: [],
+    data: Data([0x01, 0x02, 0x03])
+)
+let typed = try pssh.typedInitData()
+if case let .unknown(systemID, rawBytes) = typed {
+    // systemID == novelSystem
+    // rawBytes == Data([0x01, 0x02, 0x03])
+    _ = (systemID, rawBytes)
+}
+```
+
 ## See also
 
 - <doc:KnownDRMSystems>

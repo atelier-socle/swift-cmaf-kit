@@ -27,6 +27,40 @@ data parser. Unrecognised UUIDs surface via
 | Adobe Primetime | `f239e769-efa3-4850-9c16-a903c6932efb` | Deprecated service (2020) |
 | China DRM | `3d5e6d35-9b9a-41e8-b843-dd3c6e72c42c` | Public — GY/T 277.2 |
 
+## UUID round-trip across the nine cases
+
+``KnownDRMSystemID/init(uuid:)`` maps each registered UUID back to
+its named case; ``KnownDRMSystemID/uuid`` reverses the mapping.
+Round-trip holds for every entry in ``KnownDRMSystemID/allKnownCases``:
+
+```swift
+import CMAFKitDRM
+
+for known in KnownDRMSystemID.allKnownCases {
+    let recovered = KnownDRMSystemID(uuid: known.uuid)
+    // recovered == known
+    _ = recovered
+}
+```
+
+## Forward-compat — `.other(UUID)`
+
+Any UUID that isn't one of the nine published systems falls into
+``KnownDRMSystemID/other(_:)`` carrying the original UUID. The
+calling code can still inspect, log, or forward the system ID:
+
+```swift
+import CMAFKitDRM
+import Foundation
+
+let novel = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!
+let lifted = KnownDRMSystemID(uuid: novel)
+if case let .other(uuid) = lifted {
+    // uuid == novel
+    _ = uuid
+}
+```
+
 ## Round-trip semantics
 
 For each system:
