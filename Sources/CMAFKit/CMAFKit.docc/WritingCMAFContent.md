@@ -23,6 +23,32 @@ The writer emits an `ftyp` box (with major brand selected from
 the supplied ``CMAFProfile``) followed by a `moov` carrying the
 typed sample-entry trees per ISO/IEC 14496-12 §8.
 
+A single-track video init segment:
+
+```swift
+import CMAFKit
+
+let writer = try CMAFInitSegmentWriter(configurations: [videoConfig])
+let bytes = try writer.emit()
+// `bytes` starts with `ftyp` then `moov`
+```
+
+A two-track video + audio init segment shares one
+``CMAFInitSegmentWriter`` — the writer enforces unique
+``CMAFTrackConfiguration/trackID`` values and a single shared
+``CMAFTrackConfiguration/profile``:
+
+```swift
+import CMAFKit
+
+let writer = try CMAFInitSegmentWriter(configurations: [
+    videoConfig,   // trackID 1, .video
+    audioConfig    // trackID 2, .audio
+])
+let bytes = try writer.emit()
+// the emitted `moov` carries two `trak` boxes
+```
+
 ### Media segment composition
 
 For each track, instantiate ``CMAFMediaSegmentWriter``,
@@ -33,6 +59,40 @@ samples. Every fragment boundary returns one or more
 ``CMAFFragmentSegment`` values whose `bytes` field is the
 complete segment payload ready to write to disk or push onto a
 transport.
+
+Configuring the writer with a fragment boundary and appending
+samples until the boundary fires:
+
+```swift
+import CMAFKit
+
+let writer = try CMAFMediaSegmentWriter(
+    configuration: videoConfig,
+    fragmentBoundary: .sampleCount(3)
+)
+var emitted: [CMAFFragmentSegment] = []
+for _ in 0..<3 {
+    emitted += try await writer.appendSample(sample, toTrack: 1)
+}
+// emitted.count == 1
+// emitted.first?.sequenceNumber == 1
+```
+
+The actor exposes ``CMAFMediaSegmentWriter/state`` — useful for
+diagnostic logging or asserting test expectations on the writer's
+internal phase (`.empty`, `.openFragment`, `.finalized`):
+
+```swift
+import CMAFKit
+
+let writer = try CMAFMediaSegmentWriter(
+    configuration: videoConfig,
+    fragmentBoundary: .sampleCount(10)
+)
+_ = try await writer.appendSample(sample, toTrack: 1)
+let state = await writer.state
+// state == .openFragment(trackID: 1, sampleCount: 1)
+```
 
 ### Encryption
 

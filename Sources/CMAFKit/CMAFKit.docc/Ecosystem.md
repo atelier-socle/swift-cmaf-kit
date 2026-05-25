@@ -33,6 +33,66 @@ delivery code.
 - CaptureKit produces the audio + video samples that
   CMAFMediaSegmentWriter packages.
 
+## Integration patterns
+
+### HLS — typed codec strings for `EXT-X-STREAM-INF`
+
+HLSKit consumes CMAFKit's typed ``RFC6381CodecDescriptor`` to emit
+the `CODECS` attribute on `EXT-X-STREAM-INF`. The string is
+generated once from a typed descriptor — no string concatenation:
+
+```swift
+import CMAFKit
+
+let avcBaseline = RFC6381CodecDescriptor.avc(
+    sampleEntry: .avc1,
+    profile: 0x42,
+    constraint: 0xE0,
+    level: 0x1E
+)
+let codecString = RFC6381CodecStringBuilder()
+    .codecString(for: avcBaseline)
+// "avc1.42e01e" — ready for EXT-X-STREAM-INF CODECS
+```
+
+See <doc:CodecStringReference> for the full typed-descriptor surface
+covering every codec CMAFKit supports.
+
+### DRM — parsing `pssh` in CMAFKit, typed dispatch in CMAFKitDRM
+
+CMAFKit parses ``ProtectionSystemSpecificHeaderBox`` (`pssh`) as a
+generic structural box — the `systemID` (DRM UUID), optional version-1
+key identifiers, and the opaque `data` payload:
+
+```swift
+import CMAFKit
+
+let pssh = ProtectionSystemSpecificHeaderBox(
+    version: 1,
+    systemID: UUID(),         // 16-byte DRM system identifier
+    keyIdentifiers: [],
+    data: Data()              // opaque per-provider payload
+)
+```
+
+The optional companion library **CMAFKitDRM** adds a typed dispatch
+extension `ProtectionSystemSpecificHeaderBox/typedInitData()` that
+routes by `systemID` into typed init-data values (`Widevine`,
+`PlayReady`, `FairPlay`, `ClearKey`, `Marlin`, `Verimatrix`, `Nagra`,
+`Adobe`, `ChinaDRM`). Importing CMAFKitDRM adds the dispatch without
+modifying the base box:
+
+```swift
+// In a target that depends on CMAFKitDRM:
+//   import CMAFKitDRM
+//   let typed = try pssh.typedInitData()
+//   switch typed { case .widevine(let v): ...; case .playReady(let v): ...; }
+```
+
+The boundary is intentional: CMAFKit knows nothing about specific
+DRM providers; CMAFKitDRM knows nothing about CMAF segments. The
+extension stitches them at the `pssh` box only.
+
 ## Companion projects
 
 - **swift-podcast-feed-maker** — Podcast / Atom feed generation.
