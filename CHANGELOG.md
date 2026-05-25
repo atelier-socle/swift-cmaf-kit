@@ -2,6 +2,60 @@
 
 All notable changes to this project are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Refinement patch. Purely additive — every existing v0.1.1 call site
+compiles unchanged. Public API surface is identical to v0.1.1; the
+patch refines internal architecture, removes a dead dependency, and
+enriches the DocC catalog with samples extracted from the existing
+test suite (zero invention).
+
+### Changed
+
+- CLI architecture refactored to the idiomatic library-target + thin-
+  executable pattern matching the peer ecosystem (`swift-hls-kit`,
+  `swift-srt-kit`, `swift-rtmp-kit`, `swift-icecast-kit`). New
+  `CMAFKitCommands` library target carries the command
+  implementations; `CMAFKitCLI` remains as a thin `@main` wrapper.
+  Unblocks `xcodebuild test -scheme CMAFKit -destination
+  'platform=macOS'` on Apple platforms.
+
+### Removed
+
+- `swift-crypto` declared-but-unwired dependency (no `import Crypto`
+  call sites existed in 0.1.0 / 0.1.1; verified by Phase A audit on
+  2026-05-25).
+- Stale "Session 12" planning comment in `Package.swift`
+  `testTarget` resources.
+
+### Documentation
+
+- DocC catalog enriched with new `swift` code samples across the
+  CMAFKit + CMAFKitDRM articles. Every sample traces to an existing
+  test (zero invention).
+- `ProtocolBufferReader` / `ProtocolBufferWriter` public visibility
+  legitimised with doc comments + DocC reference.
+- `CMAFKitCLI.docc/` migrated to `CMAFKitCommands.docc/` (the
+  testable library owns the catalog, matching the peer-lib pattern).
+
+### Validation
+
+- `xcodebuild test -scheme CMAFKit -destination 'platform=macOS'`
+  works post-refactor (the headline behavioural validation of
+  0.1.2).
+- All existing tests preserved: 3 575 on macOS / 3 574 on Linux
+  Docker.
+- Coverage ≥ 92 % global maintained.
+- Zero forbidden patterns introduced (9/9 clean).
+- Zero public symbol removed since v0.1.1.
+
+### Notes
+
+- 0.1.2 is purely refinement — every existing v0.1.1 call site
+  compiles unchanged.
+- Public API surface is identical to v0.1.1 (refinement, not
+  expansion).
+
 ## [0.1.1] — 2026-05-25
 
 Patch release closing the no-compromise completion of the 0.1.0
