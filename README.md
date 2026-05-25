@@ -11,47 +11,50 @@
 
 ![swift-cmaf-kit](./assets/banner.png)
 
-A pure-Swift implementation of the Common Media Application Format (ISO/IEC 23000-19) plus the underlying ISO Base Media File Format hierarchy. Read, write, validate, and surface typed metadata for fragmented MP4 / CMAF media. Cross-platform from day one. Zero C vendoring. Swift 6.2 strict concurrency. 2,896 tests across macOS and Linux. The container and codec foundation of the [Atelier Socle](https://www.atelier-socle.com) streaming ecosystem.
+A pure-Swift implementation of the Common Media Application Format (ISO/IEC 23000-19) plus the underlying ISO Base Media File Format hierarchy. Read, write, validate, and surface typed metadata for fragmented MP4 / CMAF media. Cross-platform from day one. Zero C vendoring. Swift 6.2 strict concurrency. 3,575 tests across macOS and Linux. The container and codec foundation of the [Atelier Socle](https://www.atelier-socle.com) streaming ecosystem.
 
 ## Status
 
-**0.1.1** — patch release closing the no-compromise completion of the 0.1.0 surface. Required for HLSKit 0.7.0 migration and future DASHKit 0.1.0 enablement. Purely additive — zero breaking change on the v0.1.0 public surface. APIs may evolve before 1.0 based on community feedback. The library ships two products (`CMAFKit` + opt-in `CMAFKitDRM`) and a companion executable (`cmafkit-cli`).
+**0.1.2** — refinement patch over the v0.1.1 surface. CLI refactored to the idiomatic library + thin executable pattern (unblocks `xcodebuild test` on Apple platforms); `swift-crypto` declared-but-unwired dependency removed; industry-grade uniform DocC coverage achieved with 94 new test-traceable code samples (113 swift blocks across 25 articles). Purely additive on the public typed surface — zero breaking change. APIs may evolve before 1.0 based on community feedback. The library ships two products (`CMAFKit` + opt-in `CMAFKitDRM`) and a companion executable (`cmafkit-cli`).
 
-## What's new in 0.1.1
+## What's new in 0.1.2
 
-A no-compromise completion pass over the 0.1.0 surface, every
-primitive shipping with full spec citations and round-trip tests.
+A refinement patch that closes the architectural cohesion gap with
+the peer ecosystem (`swift-hls-kit`, `swift-srt-kit`, `swift-rtmp-kit`,
+`swift-icecast-kit`) and brings the DocC catalog to industry-grade
+uniform coverage. Every new code sample traces to an existing test.
 
-| Module | New primitives | Use case |
+| Refinement | What changed | Why |
 |---|---|---|
-| Multi-view HEVC | `HEVCParameterSets`, `HEVCVPSExtension`, `HEVCMultiLayerSPS`, `MultiLayerHEVCConfiguration`, `MVHEVCSampleEntry`, `MVHEVCPackager`, `ViewExtendedUsageBox`, `StereoInformationBox`, `HeroEyeInformationBox` | Apple Vision Pro spatial video |
-| Codec strings | `RFC6381CodecDescriptor` (23 cases), `RFC6381CodecStringBuilder` | HLS `EXT-X-STREAM-INF` + DASH `@codecs` |
-| Language tags | `BCP47LanguageTag` + ISO 639-2/T bridge + RFC 4647 matching | HLS `LANGUAGE` + DASH `@lang` |
-| Accessibility | `MediaSelectionRole`, `AccessibilityFeature`, `AccessibilityCharacteristic`, `AudioPurpose`, `AccessibilityMetadata` | EU Accessibility Act 2025 ready |
-| Audio codecs | `EC3JOCExtension` + `EC3SpecificBox.carriesDolbyAtmos`, `ALACSampleEntry`/`ALACSpecificBox`, `IntegerPCMSampleEntry`/`FloatingPointPCMSampleEntry`/`LegacyPCMSampleEntry`, `PCMConfigurationBox` | Atmos / ALAC / CMAF uncompressed PCM |
-| Validators | `ISOConformanceValidator` (I1-I8), `CENCConformanceValidator` (C1-C8) | Standalone ISO BMFF + Common Encryption validation |
+| CLI architecture | New `CMAFKitCommands` library target + thin `CMAFKitCLI` executable wrapper | Mirrors peer-lib pattern; unblocks `xcodebuild test -scheme swift-cmaf-kit-Package -destination 'platform=macOS'` on Apple platforms |
+| DocC enrichment | +94 swift code samples across 22 articles (14 → 113 blocks ecosystem-wide) | Industry-grade uniform coverage; every sample traces to a specific `@Test` (zero invention) |
+| Dependency cleanup | `swift-crypto` removed (declared but unwired) | Phase A audit verified zero `import Crypto` call sites; 3 SPM dependencies → 2 |
+| Catalog migration | `CMAFKitCLI.docc/` → `CMAFKitCommands.docc/` | The testable library owns the catalog (peer-lib convention) |
+| ProtoBuf docs | `ProtocolBufferReader` / `ProtocolBufferWriter` doc comments expanded | Legitimises public visibility for consumers implementing custom DRM providers |
 
 ### Metrics
 
-- **+679 tests** (2 896 → 3 575)
-- **+28 standards** covered
-- **Zero public symbol removed** since v0.1.0
+- **+94 swift code samples** across 22 documentation articles
+- **Zero public symbol removed** since v0.1.1
 - **Zero forbidden patterns** introduced
-- **Coverage** ≥ 92 % global maintained throughout 0.1.1
+- **3 SPM dependencies → 2** (`swift-crypto` removed; `swift-argument-parser` + `swift-docc-plugin` remaining)
+- **Coverage** ≥ 92 % global maintained (93.53 %)
 
-### Documentation
+### Validation
 
-Six new DocC articles: `MVHEVCGuide`, `CodecStringReference`,
-`LanguageTagsReference`, `AccessibilityReference`,
-`AudioCodecsReference`, `ValidatorsHierarchy`. See
-[CHANGELOG.md](CHANGELOG.md) for the full additive surface list.
+- `xcodebuild test -scheme swift-cmaf-kit-Package -destination 'platform=macOS'` → `TEST SUCCEEDED` (the headline behavioural validation of 0.1.2)
+- `xcodebuild build` matrix 5 Apple platforms → `BUILD SUCCEEDED × 5`
+- Linux Docker (`swift:6.2-jammy`, Swift 6.2.4) → `Test run with 3 574 tests passed`
+- DocC × 3 (CMAFKit + CMAFKitDRM + CMAFKitCommands) → zero warnings
+
+See [CHANGELOG.md](CHANGELOG.md) `[0.1.2]` for the complete shipped surface.
 
 ## Requirements
 
 - Swift **6.2** toolchain (strict concurrency)
 - macOS **14** / iOS **17** / iPadOS **17** / tvOS **17** / watchOS **10** / visionOS **1** / Linux (Swift 6.2)
 - Xcode 26 (when building via xcodebuild)
-- Zero external dependencies in `CMAFKit` / `CMAFKitDRM`. The CLI depends only on Apple's [`swift-argument-parser`](https://github.com/apple/swift-argument-parser). Linux builds optionally link against [`swift-crypto`](https://github.com/apple/swift-crypto) (CryptoKit shim).
+- Zero external dependencies in `CMAFKit` / `CMAFKitDRM`. The CLI depends only on Apple's [`swift-argument-parser`](https://github.com/apple/swift-argument-parser).
 
 ## Installation
 
@@ -177,7 +180,7 @@ Round-trip is byte-perfect for the six fully-typed providers (canonical-order en
 ### Cross-platform
 
 - **Apple platforms** — macOS 14, iOS 17, iPadOS 17, tvOS 17, watchOS 10, visionOS 1; xcodebuild matrix runs on every release
-- **Linux** — Swift 6.2 toolchain (`swift:6.2-jammy`); 2,896 tests / 2,896 pass; Linux uses `swift-crypto` as the conditional CryptoKit replacement
+- **Linux** — Swift 6.2 toolchain (`swift:6.2-jammy`); 3,574 tests / 3,574 pass; zero conditional dependencies (no `swift-crypto`, no platform shims)
 - **Strict concurrency** — every public type is `Sendable`; zero `@unchecked Sendable`, zero `nonisolated(unsafe)`, zero `@preconcurrency`, zero `Task.detached`
 
 ## Standards coverage
@@ -252,7 +255,7 @@ Every subcommand accepts `--output text|json|table` and is read-only (never modi
 ## Testing
 
 ```bash
-swift test                                          # 2900+ tests
+swift test                                          # 3575+ tests
 xcodebuild test -scheme swift-cmaf-kit-Package \
     -destination 'platform=macOS'                   # Apple platforms
 docker run --rm -v "$(pwd):/repo" -w /repo \
