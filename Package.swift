@@ -28,11 +28,6 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // Linux-only crypto backend. Conditional in target deps below.
-        .package(
-            url: "https://github.com/apple/swift-crypto.git",
-            from: "3.0.0"
-        ),
         // CLI argument parsing.
         .package(
             url: "https://github.com/apple/swift-argument-parser.git",
@@ -49,13 +44,7 @@ let package = Package(
     targets: [
         .target(
             name: "CMAFKit",
-            dependencies: [
-                .product(
-                    name: "Crypto",
-                    package: "swift-crypto",
-                    condition: .when(platforms: [.linux])
-                ),
-            ],
+            dependencies: [],
             path: "Sources/CMAFKit",
             swiftSettings: [
                 .enableUpcomingFeature("ExistentialAny"),
@@ -69,22 +58,27 @@ let package = Package(
                 .enableUpcomingFeature("ExistentialAny"),
             ]
         ),
-        .executableTarget(
-            name: "CMAFKitCLI",
+        .target(
+            name: "CMAFKitCommands",
             dependencies: [
                 "CMAFKit",
                 "CMAFKitDRM",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
+            path: "Sources/CMAFKitCommands",
+            swiftSettings: [
+                .enableUpcomingFeature("ExistentialAny"),
+            ]
+        ),
+        .executableTarget(
+            name: "CMAFKitCLI",
+            dependencies: ["CMAFKitCommands"],
             path: "Sources/CMAFKitCLI"
         ),
         .testTarget(
             name: "CMAFKitTests",
             dependencies: ["CMAFKit"],
-            path: "Tests/CMAFKitTests",
-            resources: [
-                // Session 12 will add: .copy("Fixtures")
-            ]
+            path: "Tests/CMAFKitTests"
         ),
         .testTarget(
             name: "CMAFKitDRMTests",
@@ -92,9 +86,9 @@ let package = Package(
             path: "Tests/CMAFKitDRMTests"
         ),
         .testTarget(
-            name: "CMAFKitCLITests",
-            dependencies: ["CMAFKitCLI", "CMAFKit", "CMAFKitDRM"],
-            path: "Tests/CMAFKitCLITests"
+            name: "CMAFKitCommandsTests",
+            dependencies: ["CMAFKitCommands", "CMAFKit", "CMAFKitDRM"],
+            path: "Tests/CMAFKitCommandsTests"
         ),
     ],
     swiftLanguageModes: [.v6]

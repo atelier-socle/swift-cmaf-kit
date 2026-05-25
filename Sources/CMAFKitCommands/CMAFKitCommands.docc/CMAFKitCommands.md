@@ -1,4 +1,4 @@
-# ``CMAFKitCLI``
+# ``CMAFKitCommands``
 
 The `cmafkit-cli` companion executable for the CMAFKit and
 CMAFKitDRM libraries — a read-only inspection and validation tool
@@ -45,7 +45,7 @@ Stable exit codes per failure class (see ``CLIError``):
 ## Topics
 
 ### Root command
-- ``CMAFKitCLI``
+- ``CMAFKitCommand``
 
 ### Subcommands
 - ``ProbeCommand``

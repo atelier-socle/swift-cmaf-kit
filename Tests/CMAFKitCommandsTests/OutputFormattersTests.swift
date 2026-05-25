@@ -4,7 +4,7 @@
 import Foundation
 import Testing
 
-@testable import CMAFKitCLI
+@testable import CMAFKitCommands
 
 @Suite("Output formatters")
 struct OutputFormattersTests {
