@@ -6,21 +6,21 @@ import Foundation
 import Testing
 
 @testable import CMAFKit
-@testable import CMAFKitCLI
+@testable import CMAFKitCommands
 
-@Suite("CMAFKitCLI integration")
+@Suite("CMAFKitCommand integration")
 struct CLIIntegrationTests {
 
     @Test
     func rootCommandConfigurationCarriesVersion() {
-        let config = CMAFKitCLI.configuration
+        let config = CMAFKitCommand.configuration
         #expect(config.commandName == "cmafkit-cli")
         #expect(config.version == CMAFKitVersion)
     }
 
     @Test
     func rootCommandListsFourSubcommands() {
-        let names = CMAFKitCLI.configuration.subcommands.map { $0._commandName }
+        let names = CMAFKitCommand.configuration.subcommands.map { $0._commandName }
         #expect(Set(names) == ["probe", "validate", "dump-tree", "decrypt-init"])
     }
 

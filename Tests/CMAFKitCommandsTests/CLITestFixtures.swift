@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2026 Atelier Socle SAS
 
-// Shared fixtures for the CMAFKitCLI test suites. Each fixture
+// Shared fixtures for the CMAFKitCommands test suites. Each fixture
 // produces a minimal CMAF init segment byte sequence by driving
 // the writer side of CMAFKit. Tests then feed those bytes to the
 // CLI report types directly (the CLI's data model is exposed via
@@ -11,7 +11,7 @@
 import Foundation
 
 @testable import CMAFKit
-@testable import CMAFKitCLI
+@testable import CMAFKitCommands
 @testable import CMAFKitDRM
 
 internal enum CLITestFixtures {

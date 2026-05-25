@@ -17,8 +17,8 @@ test suite (zero invention).
   `swift-srt-kit`, `swift-rtmp-kit`, `swift-icecast-kit`). New
   `CMAFKitCommands` library target carries the command
   implementations; `CMAFKitCLI` remains as a thin `@main` wrapper.
-  Unblocks `xcodebuild test -scheme CMAFKit -destination
-  'platform=macOS'` on Apple platforms.
+  Unblocks `xcodebuild test -scheme swift-cmaf-kit-Package
+  -destination 'platform=macOS'` on Apple platforms.
 
 ### Removed
 
@@ -40,9 +40,11 @@ test suite (zero invention).
 
 ### Validation
 
-- `xcodebuild test -scheme CMAFKit -destination 'platform=macOS'`
-  works post-refactor (the headline behavioural validation of
-  0.1.2).
+- `xcodebuild test -scheme swift-cmaf-kit-Package -destination
+  'platform=macOS'` works post-refactor (the headline behavioural
+  validation of 0.1.2). The library-only scheme (`CMAFKit`) lacks a
+  test action by SPM convention; the package-wide scheme is the
+  correct invocation, matching the `swift-hls-kit` peer pattern.
 - All existing tests preserved: 3 575 on macOS / 3 574 on Linux
   Docker.
 - Coverage ≥ 92 % global maintained.

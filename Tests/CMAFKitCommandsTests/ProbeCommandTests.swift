@@ -5,7 +5,7 @@ import Foundation
 import Testing
 
 @testable import CMAFKit
-@testable import CMAFKitCLI
+@testable import CMAFKitCommands
 
 @Suite("ProbeCommand")
 struct ProbeCommandTests {
