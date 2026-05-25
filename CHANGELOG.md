@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-05-25
+
 Refinement patch. Purely additive — every existing v0.1.1 call site
 compiles unchanged. Public API surface is identical to v0.1.1; the
 patch refines internal architecture, removes a dead dependency, and
@@ -30,13 +32,34 @@ test suite (zero invention).
 
 ### Documentation
 
-- DocC catalog enriched with new `swift` code samples across the
-  CMAFKit + CMAFKitDRM articles. Every sample traces to an existing
-  test (zero invention).
+- DocC catalog enriched with 94 new test-traceable `swift` code
+  samples across 22 articles (CMAFKit + CMAFKitDRM). The catalog
+  went from 14 swift code blocks to 113 ecosystem-wide. Every
+  sample traces to an existing `@Test` (zero invention).
 - `ProtocolBufferReader` / `ProtocolBufferWriter` public visibility
-  legitimised with doc comments + DocC reference.
+  legitimised with substantial doc comments (type-level wire-format
+  enumeration, public-visibility justification, swift-protobuf
+  fallback note, per-method `- Parameter` / `- Returns` / `- Throws`
+  markup) + DocC reference in the `CMAFKitDRM` landing under
+  "Internals exposed for extensibility".
 - `CMAFKitCLI.docc/` migrated to `CMAFKitCommands.docc/` (the
   testable library owns the catalog, matching the peer-lib pattern).
+
+### Fixed
+
+- `MVHEVCGuide.md` — corrected two API bugs in the existing sample:
+  `heroLayerID: 0` → `heroEye: .leftEye` (the `MVHEVCPackager.init`
+  parameter is `heroEye:`, not `heroLayerID:`; `heroLayerID` is
+  a derived `public nonisolated let` property); `try await
+  packager.stop()` → `await packager.stop()` (the `stop()` method
+  is `async` but not `throws`). Surfaced during S2 enrichment.
+- `CodecStringReference.md` — corrected the prose codec-string
+  examples to match actual output: `"avc1.42E01E"` →
+  `"avc1.42e01e"` (the `RFC6381CodecStringBuilder` produces
+  lowercase hexadecimal per RFC 6381), and the generic
+  `"hvc1.2.4.L120.B0"` replaced with the test-anchored
+  `"hvc1.2.4.L123.90"` (Apple HLS Authoring §2.2.1 example).
+  Surfaced during S2 enrichment.
 
 ### Validation
 
