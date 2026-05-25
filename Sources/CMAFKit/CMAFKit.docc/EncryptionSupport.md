@@ -51,6 +51,95 @@ init segment's `tenc` context. The recovered
 ``CMAFParsedSample/encryption`` matches the value originally
 supplied to the writer.
 
+## Structural box examples
+
+### ProtectionSchemeInfoBox (`sinf`)
+
+The `sinf` container groups the original codec fourCC, the scheme
+identifier, and the scheme-specific information. A `cenc` (AES-CTR
+full-sample) example:
+
+```swift
+import CMAFKit
+
+let tenc = TrackEncryptionBox(
+    version: 0,
+    defaultIsProtected: true,
+    defaultPerSampleIVSize: .eight,
+    defaultKID: KeyIdentifier(rawBytes: Data(repeating: 0x33, count: 16))
+)
+let sinf = ProtectionSchemeInfoBox(
+    originalFormat: OriginalFormatBox(dataFormat: "avc1"),
+    schemeType: SchemeTypeBox(schemeType: .cenc),
+    schemeInformation: SchemeInformationBox(trackEncryption: tenc)
+)
+```
+
+### TrackEncryptionBox (`tenc`) v0
+
+`tenc` v0 carries the protection flag, the default per-sample IV
+size, and the default 16-byte key identifier:
+
+```swift
+import CMAFKit
+
+let tenc = TrackEncryptionBox(
+    version: 0,
+    defaultIsProtected: true,
+    defaultPerSampleIVSize: .eight,
+    defaultKID: KeyIdentifier(rawBytes: Data(repeating: 0x33, count: 16))
+)
+// tenc.defaultIsProtected == true
+// tenc.defaultPerSampleIVSize == .eight
+```
+
+### SampleEncryptionBox (`senc`)
+
+`senc` carries the per-sample initialisation vectors (and optional
+subsample partitions for tracks that mix protected and clear
+regions inside a single sample):
+
+```swift
+import Foundation
+import CMAFKit
+
+let iv = Data(repeating: 0x77, count: 8)
+let senc = SampleEncryptionBox(samples: [
+    SampleEncryptionBox.SampleEncryptionEntry(initializationVector: iv),
+    SampleEncryptionBox.SampleEncryptionEntry(initializationVector: iv)
+])
+// senc.samples.count == 2
+```
+
+### CBCS pattern encryption
+
+The `cbcs` scheme (HLS FairPlay) uses CBC mode plus a 1:9 crypt-block /
+skip-block pattern and a constant IV. The `tenc` carries the pattern
+counts and the IV via ``ConstantIV``:
+
+```swift
+import CMAFKit
+
+let constantIV = try ConstantIV(rawBytes: Data(repeating: 0x55, count: 16))
+let cbcsTenc = TrackEncryptionBox(
+    version: 1,
+    defaultCryptByteBlock: 1,
+    defaultSkipByteBlock: 9,
+    defaultIsProtected: true,
+    defaultPerSampleIVSize: .zero,
+    defaultKID: KeyIdentifier(rawBytes: Data(repeating: 0x44, count: 16)),
+    defaultConstantIV: constantIV
+)
+let cbcsSinf = ProtectionSchemeInfoBox(
+    originalFormat: OriginalFormatBox(dataFormat: "avc1"),
+    schemeType: SchemeTypeBox(schemeType: .cbcs),
+    schemeInformation: SchemeInformationBox(trackEncryption: cbcsTenc)
+)
+```
+
+The CMAF-wide CENC conformance rules (C1–C8) live on
+``CENCConformanceValidator`` — see <doc:ValidatorsHierarchy>.
+
 ## Topics
 
 ### Schemes

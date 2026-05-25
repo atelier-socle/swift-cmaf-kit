@@ -78,10 +78,54 @@ print("track count:", recovered.count)
 print("codec:", recovered[0].videoFields?.codec ?? "(none)")
 ```
 
+## Validate against the spec
+
+The same init segment runs through the typed conformance
+validator with one call — useful as a smoke check in tests or a
+CI gate:
+
+```swift
+import CMAFKit
+
+let ftyp = FileTypeBox(
+    majorBrand: "cmfc",
+    minorVersion: 0,
+    compatibleBrands: ["iso6", "cmfc"]
+)
+let report = ISOConformanceValidator().validate(rootBoxes: [ftyp])
+// report.isConformant == true on conformant input
+```
+
+See <doc:ValidatorsHierarchy> for the full validator surface (ISO
++ CENC box-array layer, CMAF profile parsed-segment layer).
+
+## Compose an MV-HEVC spatial video sample entry
+
+CMAFKit 0.1.1 added first-class typed support for Apple Vision Pro
+spatial video. The Apple HLS Spatial extension boxes (`vexu`, `stri`,
+`hero`) attach directly to ``MVHEVCSampleEntry``:
+
+```swift
+import CMAFKit
+
+let entry = MVHEVCSampleEntry(
+    visualFields: VisualSampleEntryFields(width: 4096, height: 2160),
+    hvcCBase: baseRecord,
+    vexu: ViewExtendedUsageBox(viewIdentifier: 0, usageFlags: 0x01),
+    stri: StereoInformationBox(stereoArrangement: .stereoLayered),
+    hero: HeroEyeInformationBox(heroEye: .leftEye)
+)
+```
+
+See <doc:MVHEVCGuide> for the multi-layer configuration record,
+VPS extension, and packager actor.
+
 ## Next steps
 
 - <doc:WritingCMAFContent> — full writer surface
 - <doc:ReadingCMAFContent> — reader actor + parsed samples
 - <doc:ConformanceValidators> — CMAF / DASH / LL-HLS rules
+- <doc:ValidatorsHierarchy> — ISO + CENC box-array validators
+- <doc:MVHEVCGuide> — multi-view HEVC + Apple Vision Pro spatial
 - <doc:EncryptionSupport> — Common Encryption schemes
 - <doc:Ecosystem> — sibling libraries in Atelier Socle

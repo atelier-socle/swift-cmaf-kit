@@ -47,6 +47,89 @@ for caption in captions {
 }
 ```
 
+## Lower-level SEI payload decode
+
+``ClosedCaptionDecoder/decode(seiPayload:)`` is the stateless static
+that the ``ClosedCaptionExtractor`` actor wraps. It recognises the
+ATSC A/72 `GA94` user-data signature and yields a typed
+``ClosedCaptionData`` value, or `nil` for any other payload shape.
+
+Decoding a CEA-608 byte pair carried in an SEI payload:
+
+```swift
+import Foundation
+import CMAFKit
+
+let payload = Data([
+    0xB5, 0x00, 0x31,           // ATSC A/72 itu_t_t35
+    0x47, 0x41, 0x39, 0x34,     // "GA94"
+    0x03, 0x81, 0xFF,           // CEA-608, 1 pair, marker
+    0xFC, 0x41, 0x42            // field 1, byte 0x41 0x42
+])
+let decoded = ClosedCaptionDecoder.decode(seiPayload: payload)
+// .cea608([CEA608ByteData(field: .field1, byte1: 0x41, byte2: 0x42)])
+```
+
+The CEA-708 path unwraps the DTVCC packet into typed
+``DTVCCServiceBlock`` instances keyed by ``CCService``:
+
+```swift
+import Foundation
+import CMAFKit
+
+let payload = Data([
+    0xB5, 0x00, 0x31,
+    0x47, 0x41, 0x39, 0x34,
+    0x03, 0x84, 0xFF,
+    0xFE, 0x03, 0x24,           // DTVCC packet header + length
+    0xFF, 0x41, 0x42,
+    0xFF, 0x43, 0x44,
+    0xFF, 0x00, 0xFF            // padding
+])
+let decoded = ClosedCaptionDecoder.decode(seiPayload: payload)
+// .cea708(DTVCCPacket(sequenceNumber: 0, services: [
+//     DTVCCServiceBlock(serviceNumber: .service1, serviceData: Data([0x41, 0x42, 0x43, 0x44]))
+// ]))
+```
+
+## SEI `closedCaptions` convenience
+
+Both ``AVCSEIMessage`` and ``HEVCSEIMessage`` expose a typed
+``AVCSEIMessage/closedCaptions`` computed property that decodes
+payload-type-4 messages in one step:
+
+```swift
+import Foundation
+import CMAFKit
+
+let message = AVCSEIMessage(
+    payloadType: 4,
+    payloadSize: 13,
+    payload: Data([
+        0xB5, 0x00, 0x31,
+        0x47, 0x41, 0x39, 0x34,
+        0x03, 0x81, 0xFF,
+        0xFC, 0x41, 0x42
+    ])
+)
+let captions = message.closedCaptions  // ClosedCaptionData?
+```
+
+## Out-of-band sample entries
+
+The ``CEA708SampleEntry`` (`c708`) and ``CEA608SampleEntry`` (`c608`)
+carry caption tracks that live outside the video bitstream. The 708
+entry enumerates which ``CCService`` channels it carries:
+
+```swift
+import CMAFKit
+
+let entry = CEA708SampleEntry(
+    services: [.service1, .service2, .service63]
+)
+// entry.services == [.service1, .service2, .service63]
+```
+
 ## Standards covered
 
 - CTA-608-E (CEA-608 caption channels)

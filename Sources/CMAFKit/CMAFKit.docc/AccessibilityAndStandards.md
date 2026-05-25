@@ -56,6 +56,45 @@ Track language is the ISO 639-2/T three-character code carried
 in `mdhd.language` per ISO/IEC 14496-12 §8.4.2. CMAFKit accepts
 the standard 3-character codes (`und` for undetermined).
 
+## Typed accessibility metadata
+
+The cross-format-neutral ``AccessibilityMetadata`` aggregate is
+attached to ``CMAFTrackConfiguration/accessibility``. Defaults (no
+accessibility signalling) match v0.1.0 behaviour:
+
+```swift
+import CMAFKit
+
+let empty = AccessibilityMetadata.empty
+// empty.role == nil
+// empty.features.isEmpty
+// empty.audioPurpose == nil
+// empty.carriesEUAccessibilityActFeature == false
+```
+
+A full audio-description track with associated language and sign
+language carries every signal HLSKit and DASHKit need at emission
+time:
+
+```swift
+import CMAFKit
+
+let metadata = AccessibilityMetadata(
+    role: .description,
+    features: [.audioDescription],
+    characteristics: [.describesVideo],
+    audioPurpose: .audioDescription,
+    isAutoSelect: true,
+    associatedLanguage: try BCP47LanguageTag("en-US"),
+    signLanguage: try BCP47LanguageTag("ase")
+)
+```
+
+The detailed cross-format mapping (HLS CHARACTERISTICS,
+DASH `<Role>` / `<Accessibility>` schemes, EU Accessibility Act
+helpers, sign-language fixtures for BBC / ARD / France-TV /
+Disney+) lives in <doc:AccessibilityReference>.
+
 ## Standards index
 
 | Standard | Section | Coverage |
